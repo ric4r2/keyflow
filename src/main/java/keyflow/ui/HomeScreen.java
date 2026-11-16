@@ -47,7 +47,7 @@ final class HomeScreen extends JPanel {
             txt.add(Box.createVerticalStrut(6));
             txt.add(Ui.label(next.title, 1.2f, Font.BOLD, t.text));
             txt.add(Box.createVerticalStrut(4));
-            txt.add(Ui.muted(next.unit.subject.name + "  ·  " + next.unit.title + "  ·  " + next.exercises.size() + " cards"));
+            txt.add(Ui.muted(next.unit.subject.name + "  ·  " + next.unit.label() + ": " + next.unit.title + "  ·  " + next.exercises.size() + " cards"));
             cont.add(txt, BorderLayout.CENTER);
             JPanel btn = Ui.clear(new FlowLayout(FlowLayout.RIGHT, 0, 6));
             btn.add(Ui.primary("Start", () -> app.startLesson(next)).size(1.05f));

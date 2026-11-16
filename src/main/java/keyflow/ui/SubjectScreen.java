@@ -102,6 +102,10 @@ final class SubjectScreen extends JPanel {
         right.add(bar);
         right.add(Box.createVerticalStrut(10));
         right.add(Ui.muted(encouragement(app, s, next, done)));
+        if (!s.book.isEmpty()) {
+            right.add(Box.createVerticalStrut(6));
+            right.add(Ui.muted("Study rhythm: do a lesson first, then read its book section. Trying before reading makes the reading stick."));
+        }
         c.add(right, BorderLayout.CENTER);
         return c;
     }
@@ -126,10 +130,16 @@ final class SubjectScreen extends JPanel {
         int total = u.lessons.size();
         boolean complete = total > 0 && done == total;
         JPanel row = Ui.clear(new BorderLayout(14, 0));
-        row.add(new Rail(Rail.Node.MILESTONE, lineLit, complete, done > 0, complete), BorderLayout.WEST);
+        Rail rail = new Rail(Rail.Node.MILESTONE, lineLit, complete, done > 0, complete);
+        rail.number = u.chapter() > 0 ? u.chapter() : u.subject.units.indexOf(u) + 1;
+        row.add(rail, BorderLayout.WEST);
         JPanel mid = Ui.clear(null);
         mid.setLayout(new BoxLayout(mid, BoxLayout.Y_AXIS));
         mid.setBorder(BorderFactory.createEmptyBorder(22, 0, 8, 0));
+        JLabel kicker = Ui.label(u.label().toUpperCase(), 0.72f, Font.BOLD, done > 0 ? t.success : t.muted);
+        kicker.setAlignmentX(LEFT_ALIGNMENT);
+        mid.add(kicker);
+        mid.add(Box.createVerticalStrut(3));
         JPanel head = Ui.clear(new BorderLayout(10, 0));
         head.add(Ui.label(u.title, 1.1f, Font.BOLD, t.text), BorderLayout.CENTER);
         String chip = complete ? "Complete" : percent(done, total) + "%  ·  " + done + "/" + total;
@@ -137,7 +147,7 @@ final class SubjectScreen extends JPanel {
         head.setAlignmentX(LEFT_ALIGNMENT);
         mid.add(head);
         if (!u.description.isEmpty()) {
-            JComponent d = Ui.prose(u.description + (u.book.isEmpty() ? "" : "   (" + u.book + ")"), 0.85f, t.muted);
+            JComponent d = Ui.prose(u.description, 0.85f, t.muted);
             d.setAlignmentX(LEFT_ALIGNMENT);
             mid.add(Box.createVerticalStrut(4));
             mid.add(d);
@@ -165,7 +175,8 @@ final class SubjectScreen extends JPanel {
         mid.add(Ui.label(l.title, 0.98f, done ? Font.PLAIN : Font.BOLD, done ? t.muted : t.text));
         int practice = 0;
         for (Exercise e : l.exercises) if (e.kind.isPractice()) practice++;
-        String meta = l.exercises.size() + " cards  ·  " + practice + " practice" + (l.book.isEmpty() ? "" : "  ·  " + l.book);
+        String sec = l.section();
+        String meta = (sec.isEmpty() ? "" : "Book: " + sec + "  ·  ") + l.exercises.size() + " cards  ·  " + practice + " practice";
         mid.add(Box.createVerticalStrut(2));
         mid.add(Ui.muted(meta));
         if (!l.keys.isEmpty() && !"everything".equals(l.keys.trim())) {
@@ -191,6 +202,7 @@ final class SubjectScreen extends JPanel {
 
         final Node node;
         final boolean topLit, bottomLit, partial, complete;
+        int number;   // chapter / unit number shown in an unfinished milestone
 
         Rail(Node node, boolean topLit, boolean bottomLit, boolean partial, boolean complete) {
             this.node = node;
@@ -228,7 +240,7 @@ final class SubjectScreen extends JPanel {
                 g.setColor(complete || partial ? t.success : t.border);
                 g.drawRoundRect(x, y, s, s, 9, 9);
                 if (complete) check(g, cx, cy, 7, t.onAccent);
-                else star(g, cx, cy, partial ? t.success : t.muted);
+                else number(g, cx, cy, number, partial ? t.success : t.muted);
             } else if (node == Node.NEXT) {
                 int r = 12;
                 g.setColor(t.bg);
@@ -260,17 +272,13 @@ final class SubjectScreen extends JPanel {
             g.drawPolyline(new int[]{cx - s, cx - s / 3, cx + s}, new int[]{cy, cy + s * 2 / 3, cy - s * 2 / 3}, 3);
         }
 
-        /** A small flag-like mark for milestones that are not complete yet. */
-        private static void star(Graphics2D g, int cx, int cy, Color c) {
+        /** The chapter (or unit) number inside the milestone square. */
+        private static void number(Graphics2D g, int cx, int cy, int n, Color c) {
             g.setColor(c);
-            g.setFont(Theme.ui(0.7f, Font.BOLD));
+            g.setFont(Theme.ui(n >= 10 ? 0.72f : 0.8f, Font.BOLD));
             FontMetrics fm = g.getFontMetrics();
-            String s = "⚑";
-            if (g.getFont().canDisplay('⚑')) {
-                g.drawString(s, cx - fm.stringWidth(s) / 2, cy + fm.getAscent() / 2 - 1);
-            } else {
-                g.fillRect(cx - 4, cy - 4, 8, 8);
-            }
+            String s = String.valueOf(n);
+            g.drawString(s, cx - fm.stringWidth(s) / 2, cy + (fm.getAscent() - fm.getDescent()) / 2);
         }
     }
 }

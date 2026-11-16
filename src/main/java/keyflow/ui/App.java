@@ -241,7 +241,8 @@ public final class App {
         progress.setLastSubject(l.unit.subject.id);
         navigate(how, new Entry("lesson:" + l.id, l.unit.subject.name, prev -> {
             if (prev instanceof LessonPlayer) return new LessonPlayer((LessonPlayer) prev);
-            LessonPlayer p = new LessonPlayer(this, l.unit.subject.name + "  ·  " + l.title, LessonPlayer.withWarmUp(this, l), l);
+            String where = l.unit.chapter() > 0 ? l.unit.label() + (l.section().isEmpty() ? "" : ", " + l.section().toLowerCase()) : l.unit.title;
+            LessonPlayer p = new LessonPlayer(this, l.unit.subject.name + "  ·  " + where + "  ·  " + l.title, LessonPlayer.withWarmUp(this, l), l);
             p.begin();
             return p;
         }, true));

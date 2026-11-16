@@ -172,6 +172,10 @@ src/test/java/keyflow/    engine tests, curriculum validation, contrast tests, s
 
 The Java subject **follows the chapter structure of *Core Java, Volume I: Fundamentals* (11th edition) by Cay S. Horstmann**, and each lesson names the matching book section so you can read along for depth. **All explanations, examples and exercises in Keyflow are original.** No text or code from the book is included. Keyflow is not affiliated with the author or publisher. Get the book; it is excellent.
 
+In the app, every Java unit is labelled with its **chapter number** and every lesson with its **book section** (for example *Chapter 3, section 3.5*), so the two line up exactly.
+
+**Suggested rhythm:** do a lesson in Keyflow first, then read that section in the book, then let **Review** bring the cards back over the following days. Trying to answer before reading (the *pretesting effect*) makes the reading stick better than reading first, and a 5-minute lesson is an easier start than a chapter.
+
 ## Roadmap
 
 - Linux and Windows terminal subjects with a simulated shell for command drills
