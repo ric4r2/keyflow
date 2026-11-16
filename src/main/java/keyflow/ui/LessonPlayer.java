@@ -7,8 +7,6 @@ import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -43,11 +41,11 @@ final class LessonPlayer extends JPanel {
     private final String heading;
     private final Lesson lesson;
     private final List<Exercise> queue;
-    private final Set<String> requeued = new HashSet<>();
-    private final Set<Exercise> warmUps = new HashSet<>();
+    private final Set<String> requeued;
+    private final Set<Exercise> warmUps;
     private final int originalSize;
     private int index = -1, firstTryRight, practiced, xp;
-    private final long startMs = System.currentTimeMillis();
+    private final long startMs;
 
     // per-card state
     private Exercise card;
@@ -58,14 +56,14 @@ final class LessonPlayer extends JPanel {
     private JPanel optionsPanel;
 
     private final Ui.Page page = new Ui.Page(new Ui.Column(780, 18));
-    private final JScrollPane scroll;
+    private JScrollPane scroll;
     private final Ui.Bar bar = new Ui.Bar(5);
-    private final JLabel counter;
+    private final JLabel counter = Ui.muted("");
     private final Ui.Button primary = Ui.primary("Continue", () -> { });
     private final Ui.Button hintBtn = Ui.ghost("Hint", this::showHint);
     private final Ui.Button answerBtn = Ui.ghost("Show answer", this::reveal);
     private final Ui.Button resetBtn = Ui.ghost("Reset", this::resetVim);
-    private final Ui.Button vimToggle;
+    private final Ui.Button vimToggle = Ui.ghost("", this::toggleVim).size(0.85f);
 
     LessonPlayer(App app, String heading, List<Exercise> cards, Lesson lesson) {
         super(new BorderLayout());
@@ -73,6 +71,12 @@ final class LessonPlayer extends JPanel {
         this.heading = heading;
         this.lesson = lesson;
         this.queue = new ArrayList<>(cards);
+        this.requeued = new HashSet<>();
+        this.warmUps = new HashSet<>();
+        this.startMs = System.currentTimeMillis();
+        if (lesson != null) {
+            for (Exercise e : queue) if (e.lesson != lesson) warmUps.add(e);
+        }
         if (lesson != null && !lesson.intro.isEmpty() && lesson.exercises.stream().noneMatch(e -> e.kind == Exercise.Kind.READ)) {
             Exercise intro = new Exercise();
             intro.kind = Exercise.Kind.READ;
@@ -80,16 +84,40 @@ final class LessonPlayer extends JPanel {
             intro.title = lesson.title;
             intro.text = lesson.intro + (lesson.keys.isEmpty() ? "" : "\n**Keys in this lesson:** `" + lesson.keys + "`");
             intro.lesson = lesson;
-            queue.add(0, intro);
+            queue.add(warmUps.isEmpty() ? 0 : 1, intro);   // warm-up recall first, then the new idea
         }
         this.originalSize = queue.size();
+        buildChrome();
+    }
+
+    /** A fresh player (new theme, font, Vim setting) that continues where {@code old} was. */
+    LessonPlayer(LessonPlayer old) {
+        super(new BorderLayout());
+        this.app = old.app;
+        this.heading = old.heading;
+        this.lesson = old.lesson;
+        this.queue = old.queue;
+        this.requeued = old.requeued;
+        this.warmUps = old.warmUps;
+        this.originalSize = old.originalSize;
+        this.startMs = old.startMs;
+        this.firstTryRight = old.firstTryRight;
+        this.practiced = old.practiced;
+        this.xp = old.xp;
+        buildChrome();
+        // an answered card is not shown again (it was already scored); an open one starts fresh
+        index = old.done || old.index >= queue.size() ? old.index : old.index - 1;
+        next();
+    }
+
+    private void buildChrome() {
         Theme t = Theme.get();
+        setFocusable(true);
         setBackground(t.bg);
 
         JPanel head = Ui.clear(new BorderLayout(14, 6));
         head.setBorder(BorderFactory.createEmptyBorder(14, 28, 6, 28));
         head.add(Ui.muted(heading), BorderLayout.WEST);
-        counter = Ui.muted("");
         head.add(counter, BorderLayout.EAST);
         head.add(bar, BorderLayout.SOUTH);
         add(head, BorderLayout.NORTH);
@@ -98,7 +126,6 @@ final class LessonPlayer extends JPanel {
         scroll = Ui.scroll(page);
         add(scroll, BorderLayout.CENTER);
 
-        vimToggle = Ui.ghost("", this::toggleVim).size(0.85f);
         JPanel foot = new JPanel(new BorderLayout());
         foot.setBackground(t.bg);
         foot.setBorder(BorderFactory.createCompoundBorder(
@@ -137,10 +164,15 @@ final class LessonPlayer extends JPanel {
     }
 
     void begin() {
-        if (lesson != null && !queue.isEmpty() && !lesson.exercises.contains(queue.get(0)) && queue.get(0).lesson != lesson) {
-            warmUps.add(queue.get(0));
-        }
         next();
+    }
+
+    /** Put keyboard focus where the user works: the editor while a code card is open, else the player (Enter = primary). */
+    void focusCard() {
+        SwingUtilities.invokeLater(() -> {
+            if (editor != null && !done) editor.requestFocusInWindow();
+            else requestFocusInWindow();
+        });
     }
 
     private void bind(String key, Runnable r) {
@@ -263,11 +295,8 @@ final class LessonPlayer extends JPanel {
         page.add(feedback);
         page.revalidate();
         page.repaint();
-        SwingUtilities.invokeLater(() -> {
-            scroll.getVerticalScrollBar().setValue(0);
-            if (editor != null) editor.requestFocusInWindow();
-            else requestFocusInWindow();
-        });
+        SwingUtilities.invokeLater(() -> scroll.getVerticalScrollBar().setValue(0));
+        focusCard();
     }
 
     private CodeEditor codeView(String code) {
@@ -293,6 +322,7 @@ final class LessonPlayer extends JPanel {
         primary.setEnabled(true);
         primary.setAction(this::next);
         counter.setText((index + 1) + " / " + queue.size());
+        focusCard();   // so Enter continues, even after a Vim drill or Ctrl+Enter in the editor
     }
 
     private void showFeedback(boolean good, String md) {
@@ -323,12 +353,7 @@ final class LessonPlayer extends JPanel {
         row.add(Ui.prose(text, 1.0f, t.text), BorderLayout.CENTER);
         if (state == null) {
             row.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-            row.addMouseListener(new MouseAdapter() {
-                @Override
-                public void mouseClicked(MouseEvent e) {
-                    pickOption(i);
-                }
-            });
+            Ui.onClick(row, () -> pickOption(i));
         }
         return row;
     }
@@ -436,6 +461,7 @@ final class LessonPlayer extends JPanel {
     private void toggleVim() {
         boolean v = !app.progress.vimKeys();
         app.progress.setVimKeys(v);
+        app.settingsAppliedHere();
         vimToggle.setText("Vim keys: " + (v ? "on" : "off"));
         if (editor != null && card.kind != Exercise.Kind.VIM) {
             editor.setVim(v);
@@ -533,15 +559,17 @@ final class LessonPlayer extends JPanel {
         if (nextLesson != null) {
             primary.setText("Next: " + shorten(nextLesson.title));
             primary.setEnabled(true);
-            primary.setAction(() -> app.startLesson(nextLesson));
-            page.add(Ui.secondary("Back to " + lesson.unit.subject.name, () -> app.showSubject(lesson.unit.subject)));
+            primary.setAction(() -> app.startNextLesson(nextLesson));
+            page.add(Ui.secondary("Back to " + lesson.unit.subject.name, () -> app.leaveLessonFor(lesson.unit.subject)));
         } else {
             primary.setText("Home");
             primary.setEnabled(true);
             primary.setAction(app::showHome);
         }
+        editor = null;
         page.revalidate();
         page.repaint();
+        focusCard();
     }
 
     private static String shorten(String s) {
@@ -551,6 +579,26 @@ final class LessonPlayer extends JPanel {
     /** Skip to the next card (used by the screenshot tool). */
     void advance() {
         next();
+    }
+
+    int queueSize() {
+        return queue.size();
+    }
+
+    int position() {
+        return index;
+    }
+
+    boolean cardDone() {
+        return done;
+    }
+
+    boolean finished() {
+        return index >= queue.size();
+    }
+
+    Ui.Button primaryButton() {
+        return primary;
     }
 
     CodeEditor currentEditor() {

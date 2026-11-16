@@ -23,6 +23,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextPane;
+import javax.swing.SwingUtilities;
 import javax.swing.SwingConstants;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.SimpleAttributeSet;
@@ -109,9 +110,19 @@ public final class Ui {
                     repaint();
                 }
 
+                private boolean down;
+
                 @Override
-                public void mouseClicked(MouseEvent e) {
-                    if (Button.this.enabled && Button.this.action != null) Button.this.action.run();
+                public void mousePressed(MouseEvent e) {
+                    down = SwingUtilities.isLeftMouseButton(e);
+                }
+
+                @Override
+                public void mouseReleased(MouseEvent e) {
+                    // a press and release on the button counts, even if the mouse moved a little in between
+                    boolean hit = down && contains(e.getPoint());
+                    down = false;
+                    if (hit) click();
                 }
             });
         }
@@ -201,6 +212,38 @@ public final class Ui {
             g.setColor(fg);
             g.drawString(text, (w - fm.stringWidth(text)) / 2, (h - fm.getHeight()) / 2 + fm.getAscent());
             g.dispose();
+        }
+    }
+
+    /**
+     * Make a whole card clickable, including its children: text panes would otherwise swallow the
+     * click, and a press-release pair counts even when the mouse moves slightly (unlike mouseClicked).
+     */
+    public static void onClick(JComponent target, Runnable r) {
+        MouseAdapter m = new MouseAdapter() {
+            private boolean down;
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+                down = SwingUtilities.isLeftMouseButton(e);
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                boolean hit = down && target.contains(SwingUtilities.convertPoint(e.getComponent(), e.getPoint(), target));
+                down = false;
+                if (hit) r.run();
+            }
+        };
+        attach(target, m);
+    }
+
+    private static void attach(java.awt.Component c, MouseAdapter m) {
+        c.addMouseListener(m);
+        c.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        if (c instanceof javax.swing.text.JTextComponent) ((javax.swing.text.JTextComponent) c).setHighlighter(null);
+        if (c instanceof java.awt.Container) {
+            for (java.awt.Component k : ((java.awt.Container) c).getComponents()) attach(k, m);
         }
     }
 

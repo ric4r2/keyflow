@@ -3,8 +3,6 @@ package keyflow.ui;
 import java.awt.BorderLayout;
 import java.awt.Cursor;
 import java.awt.Font;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -59,12 +57,7 @@ final class SubjectScreen extends JPanel {
         mid.add(Ui.muted(meta));
         c.add(mid, BorderLayout.CENTER);
         c.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        c.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                app.startLesson(l);
-            }
-        });
+        Ui.onClick(c, () -> app.startLesson(l));
         return c;
     }
 }

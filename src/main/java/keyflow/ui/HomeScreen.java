@@ -6,8 +6,6 @@ import java.awt.Cursor;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridLayout;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.time.LocalTime;
 
 import javax.swing.BorderFactory;
@@ -53,6 +51,14 @@ final class HomeScreen extends JPanel {
             cont.add(txt, BorderLayout.CENTER);
             JPanel btn = Ui.clear(new FlowLayout(FlowLayout.RIGHT, 0, 6));
             btn.add(Ui.primary("Start", () -> app.startLesson(next)).size(1.05f));
+            // Enter starts it: the one obvious next step is also one key away
+            getInputMap(WHEN_IN_FOCUSED_WINDOW).put(javax.swing.KeyStroke.getKeyStroke("ENTER"), "kf-continue");
+            getActionMap().put("kf-continue", new javax.swing.AbstractAction() {
+                @Override
+                public void actionPerformed(java.awt.event.ActionEvent e) {
+                    app.startLesson(next);
+                }
+            });
             cont.add(btn, BorderLayout.EAST);
         } else {
             txt.add(Ui.label("Everything is done. Impressive!", 1.2f, Font.BOLD, t.text));
@@ -120,12 +126,7 @@ final class HomeScreen extends JPanel {
             c.add(bar, BorderLayout.CENTER);
             c.add(Ui.muted(done + " / " + total + " lessons"), BorderLayout.SOUTH);
             c.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-            c.addMouseListener(new MouseAdapter() {
-                @Override
-                public void mouseClicked(MouseEvent e) {
-                    app.showSubject(s);
-                }
-            });
+            Ui.onClick(c, () -> app.showSubject(s));
         } else {
             c.add(Ui.muted("Coming soon"), BorderLayout.SOUTH);
         }
@@ -150,12 +151,7 @@ final class HomeScreen extends JPanel {
             JLabel chip = Ui.chip(s.name, fg, bg);
             if (ok) {
                 chip.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-                chip.addMouseListener(new MouseAdapter() {
-                    @Override
-                    public void mouseClicked(MouseEvent e) {
-                        app.showSubject(s);
-                    }
-                });
+                Ui.onClick(chip, () -> app.showSubject(s));
             }
             steps.add(chip);
         }

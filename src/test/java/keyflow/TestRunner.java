@@ -18,6 +18,7 @@ public final class TestRunner {
         EngineTest.run(t);
         CurriculumTest.run(t);
         ThemeTest.run(t);
+        keyflow.ui.NavigationTest.run(t);
         System.out.println();
         for (String f : t.failures) System.out.println("FAIL " + f);
         System.out.println(t.passed + " passed, " + t.failures.size() + " failed");
@@ -41,7 +42,7 @@ public final class TestRunner {
         }
     }
 
-    void check(String name, BooleanSupplier s) {
+    public void check(String name, BooleanSupplier s) {
         try {
             if (s.getAsBoolean()) passed++;
             else failures.add(name);
@@ -51,7 +52,7 @@ public final class TestRunner {
         }
     }
 
-    void fail(String msg) {
+    public void fail(String msg) {
         failures.add(msg);
     }
 

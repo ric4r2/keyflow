@@ -31,12 +31,11 @@ public final class App {
     private final JFrame frame;
     private final JPanel root = new JPanel(new BorderLayout());
     private JComponent screen;
-    private Runnable rebuild = this::showHome;
 
     // focus timer state (survives screen changes)
     private Timer timer;
     private int secondsLeft;
-    private boolean onBreak, running;
+    private boolean onBreak, running, timerFresh = true;
     private JLabel timerLabel;
     private Ui.Button timerButton;
     private int cardsThisSprint;
@@ -46,6 +45,12 @@ public final class App {
         this.progress = progress;
         Theme.set(progress.theme());
         Theme.setBaseSize(progress.fontSize());
+        installKeys();
+        secondsLeft = progress.focusMinutes() * 60;
+        if (java.awt.GraphicsEnvironment.isHeadless()) {   // tests drive the screens without a window
+            frame = null;
+            return;
+        }
         frame = new JFrame("Keyflow");
         frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         frame.addWindowListener(new WindowAdapter() {
@@ -61,7 +66,26 @@ public final class App {
         frame.setSize(Math.min(1180, scr.width - 80), Math.min(860, scr.height - 80));
         frame.setMinimumSize(new Dimension(760, 560));
         frame.setLocationRelativeTo(null);
-        secondsLeft = progress.focusMinutes() * 60;
+    }
+
+    /** Alt+Left goes back anywhere; Esc goes back on list screens (in lessons Esc belongs to Vim). */
+    private void installKeys() {
+        javax.swing.InputMap im = root.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
+        im.put(javax.swing.KeyStroke.getKeyStroke("alt LEFT"), "kf-back");
+        im.put(javax.swing.KeyStroke.getKeyStroke("ESCAPE"), "kf-esc");
+        root.getActionMap().put("kf-back", action(this::back));
+        root.getActionMap().put("kf-esc", action(() -> {
+            if (canGoBack() && !(screen instanceof LessonPlayer)) back();
+        }));
+    }
+
+    private static javax.swing.Action action(Runnable r) {
+        return new javax.swing.AbstractAction() {
+            @Override
+            public void actionPerformed(java.awt.event.ActionEvent e) {
+                r.run();
+            }
+        };
     }
 
     public JFrame frame() {
@@ -70,41 +94,143 @@ public final class App {
 
     public void start() {
         showHome();
-        frame.setVisible(true);
+        if (frame != null) frame.setVisible(true);
     }
 
     // ------------------------------------------------------------------ navigation
+    //
+    // A history stack: the top entry is the screen on screen. Home clears it, every other screen
+    // is pushed, and Back pops. Opening a screen that is already in the stack pops back to it,
+    // so Subject -> Lesson -> "Back to subject" never builds a loop.
 
-    private void show(JComponent content, String crumb, boolean showBack, Runnable rebuilder) {
-        rebuild = rebuilder;
+    private static final class Entry {
+        final String key, crumb;
+        final java.util.function.Function<JComponent, JComponent> factory;
+        final boolean keepAlive;   // lesson players keep their place when you come back
+        JComponent comp;
+        String stamp;
+
+        Entry(String key, String crumb, java.util.function.Function<JComponent, JComponent> factory, boolean keepAlive) {
+            this.key = key;
+            this.crumb = crumb;
+            this.factory = factory;
+            this.keepAlive = keepAlive;
+        }
+    }
+
+    private final java.util.ArrayDeque<Entry> history = new java.util.ArrayDeque<>();
+
+    private enum Nav { ROOT, PUSH, REPLACE }
+
+    private void navigate(Nav how, Entry e) {
+        if (how == Nav.ROOT) {
+            history.clear();
+        } else if (contains(e.key)) {
+            while (!history.peek().key.equals(e.key)) history.pop();
+            history.pop();
+        } else if (how == Nav.REPLACE && !history.isEmpty()) {
+            history.pop();
+        }
+        history.push(e);
+        build(e, null);
+    }
+
+    private boolean contains(String key) {
+        for (Entry e : history) if (e.key.equals(key)) return true;
+        return false;
+    }
+
+    private void build(Entry e, JComponent previous) {
+        e.comp = e.factory.apply(previous);
+        e.stamp = stamp();
+        display(e);
+    }
+
+    /** Settings that change how screens look; a kept screen is rebuilt when they differ. */
+    private String stamp() {
+        return progress.theme() + "|" + progress.fontSize() + "|" + progress.vimKeys();
+    }
+
+    private void display(Entry e) {
         root.removeAll();
         root.setBackground(Theme.get().bg);
-        root.add(topBar(crumb, showBack), BorderLayout.NORTH);
-        root.add(content, BorderLayout.CENTER);
-        screen = content;
+        root.add(topBar(), BorderLayout.NORTH);
+        root.add(e.comp, BorderLayout.CENTER);
+        screen = e.comp;
         root.revalidate();
         root.repaint();
+        if (e.comp instanceof LessonPlayer) ((LessonPlayer) e.comp).focusCard();
+    }
+
+    /** Go back one screen (top-bar Back, Alt+Left, or Esc outside lessons). */
+    public void back() {
+        if (history.size() <= 1) {
+            showHome();
+            return;
+        }
+        history.pop();
+        Entry e = history.peek();
+        if (e.keepAlive && e.comp != null) {
+            if (stamp().equals(e.stamp)) display(e);
+            else build(e, e.comp);          // restyle, keep the lesson position
+        } else {
+            build(e, null);                 // lists are cheap: rebuild so they show fresh progress
+        }
+    }
+
+    /** The current screen applied a setting itself (e.g. the lesson's Vim toggle): no rebuild needed for it. */
+    void settingsAppliedHere() {
+        if (!history.isEmpty()) history.peek().stamp = stamp();
+    }
+
+    public boolean canGoBack() {
+        return history.size() > 1;
+    }
+
+    /** Keys of the screens in the history, bottom first (for tests). */
+    java.util.List<String> historyKeys() {
+        java.util.List<String> out = new java.util.ArrayList<>();
+        for (java.util.Iterator<Entry> it = history.descendingIterator(); it.hasNext(); ) out.add(it.next().key);
+        return out;
     }
 
     public void showHome() {
-        show(new HomeScreen(this), "", false, this::showHome);
+        navigate(Nav.ROOT, new Entry("home", "", prev -> new HomeScreen(this), false));
     }
 
     public void showSubject(Subject s) {
         progress.setLastSubject(s.id);
-        show(new SubjectScreen(this, s), s.name, true, () -> showSubject(s));
+        navigate(Nav.PUSH, new Entry("subject:" + s.id, s.name, prev -> new SubjectScreen(this, s), false));
+    }
+
+    /** Leave a finished lesson for its subject map; the finished lesson is not kept in the history. */
+    public void leaveLessonFor(Subject s) {
+        progress.setLastSubject(s.id);
+        navigate(Nav.REPLACE, new Entry("subject:" + s.id, s.name, prev -> new SubjectScreen(this, s), false));
     }
 
     public void showSettings() {
-        show(new SettingsScreen(this), "Settings", true, this::showSettings);
+        navigate(Nav.PUSH, new Entry("settings", "Settings", prev -> new SettingsScreen(this), false));
     }
 
     public void startLesson(Lesson l) {
+        openLesson(l, Nav.PUSH);
+    }
+
+    /** From a lesson's finish screen: the next lesson takes its place, so Back still leads to the map. */
+    public void startNextLesson(Lesson l) {
+        openLesson(l, Nav.REPLACE);
+    }
+
+    private void openLesson(Lesson l, Nav how) {
         progress.setLastLesson(l);
         progress.setLastSubject(l.unit.subject.id);
-        LessonPlayer p = new LessonPlayer(this, l.unit.subject.name + "  ·  " + l.title, LessonPlayer.withWarmUp(this, l), l);
-        show(p, l.unit.subject.name, true, () -> startLesson(l));
-        p.begin();
+        navigate(how, new Entry("lesson:" + l.id, l.unit.subject.name, prev -> {
+            if (prev instanceof LessonPlayer) return new LessonPlayer((LessonPlayer) prev);
+            LessonPlayer p = new LessonPlayer(this, l.unit.subject.name + "  ·  " + l.title, LessonPlayer.withWarmUp(this, l), l);
+            p.begin();
+            return p;
+        }, true));
     }
 
     public void startReview() {
@@ -113,17 +239,27 @@ public final class App {
             showHome();
             return;
         }
-        LessonPlayer p = new LessonPlayer(this, "Review  ·  " + due.size() + " cards", due, null);
-        show(p, "Review", true, this::startReview);
-        p.begin();
+        navigate(Nav.PUSH, new Entry("review", "Review", prev -> {
+            if (prev instanceof LessonPlayer) return new LessonPlayer((LessonPlayer) prev);
+            LessonPlayer p = new LessonPlayer(this, "Review  ·  " + due.size() + " cards", due, null);
+            p.begin();
+            return p;
+        }, true));
     }
 
     /** Re-create the current screen (after a theme or font change). */
     public void refresh() {
         Theme.set(progress.theme());
         Theme.setBaseSize(progress.fontSize());
-        rebuild.run();
+        if (timerFresh && !running) secondsLeft = progress.focusMinutes() * 60;
+        Entry e = history.peek();
+        if (e == null) showHome();
+        else build(e, e.comp);
     }
+
+    /** Asks the user to confirm a destructive action; replaceable in tests. */
+    java.util.function.Predicate<String> confirm = msg -> javax.swing.JOptionPane.showConfirmDialog(root, msg, "Keyflow",
+            javax.swing.JOptionPane.OK_CANCEL_OPTION) == javax.swing.JOptionPane.OK_OPTION;
 
     public Lesson continueLesson() {
         Subject s = catalog.subject(progress.lastSubject());
@@ -146,7 +282,7 @@ public final class App {
 
     // ------------------------------------------------------------------ top bar & focus timer
 
-    private JComponent topBar(String crumb, boolean showBack) {
+    private JComponent topBar() {
         Theme t = Theme.get();
         JPanel bar = new JPanel();
         bar.setLayout(new BoxLayout(bar, BoxLayout.X_AXIS));
@@ -156,14 +292,14 @@ public final class App {
                 BorderFactory.createEmptyBorder(10, 20, 10, 20)));
         JLabel logo = Ui.label("keyflow", 1.05f, Font.BOLD, t.text);
         logo.setCursor(java.awt.Cursor.getPredefinedCursor(java.awt.Cursor.HAND_CURSOR));
-        logo.addMouseListener(new java.awt.event.MouseAdapter() {
-            @Override
-            public void mouseClicked(java.awt.event.MouseEvent e) {
-                showHome();
-            }
-        });
+        Ui.onClick(logo, () -> showHome());
+        if (canGoBack()) {
+            bar.add(Ui.ghost("← Back", this::back).size(0.9f));
+            bar.add(Box.createHorizontalStrut(10));
+        }
         bar.add(logo);
-        if (showBack && !crumb.isEmpty()) {
+        String crumb = history.isEmpty() ? "" : history.peek().crumb;
+        if (!crumb.isEmpty()) {
             bar.add(Box.createHorizontalStrut(14));
             bar.add(Ui.label("/   " + crumb, 0.9f, Font.PLAIN, t.muted));
         }
@@ -175,7 +311,7 @@ public final class App {
         timerButton = Ui.ghost("", this::toggleTimer).size(0.85f);
         bar.add(timerButton);
         bar.add(Box.createHorizontalStrut(6));
-        bar.add(Ui.ghost("Settings", this::showSettings).size(0.85f));
+        if (history.isEmpty() || !history.peek().key.equals("settings")) bar.add(Ui.ghost("Settings", this::showSettings).size(0.85f));
         updateTimerLabel();
         return bar;
     }
@@ -185,6 +321,7 @@ public final class App {
             timer = new Timer(1000, e -> tick());
         }
         running = !running;
+        timerFresh = false;
         if (running) timer.start();
         else timer.stop();
         updateTimerLabel();
@@ -225,6 +362,10 @@ public final class App {
             timerLabel.setText(time + "  ");
             timerButton.setText(onBreak ? "Start break" : "Start focus");
         }
+    }
+
+    JComponent rootPane() {
+        return root;
     }
 
     public JComponent currentScreen() {

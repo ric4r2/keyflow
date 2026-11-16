@@ -9,7 +9,6 @@ import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
 import keyflow.data.Progress;
@@ -42,8 +41,7 @@ final class SettingsScreen extends JPanel {
                 stepper(() -> { pr.setDailyGoal(pr.dailyGoal() - 10); app.refresh(); }, () -> { pr.setDailyGoal(pr.dailyGoal() + 10); app.refresh(); })));
         page.add(row("Progress file", Progress.dataDir().resolve("progress.properties").toString(),
                 Ui.secondary("Reset progress", () -> {
-                    int ok = JOptionPane.showConfirmDialog(this, "Erase all progress? This cannot be undone.", "Reset", JOptionPane.OK_CANCEL_OPTION);
-                    if (ok == JOptionPane.OK_OPTION) {
+                    if (app.confirm.test("Erase all progress? This cannot be undone.")) {
                         pr.resetAll();
                         app.refresh();
                     }

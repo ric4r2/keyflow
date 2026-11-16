@@ -119,8 +119,13 @@ public final class Screenshots {
             JComponent c = (JComponent) app.frame().getContentPane();
             c.revalidate();
             c.validate();
-            BufferedImage bi = new BufferedImage(c.getWidth(), c.getHeight(), BufferedImage.TYPE_INT_RGB);
+            // Paint at the screen's scale: text is laid out with the screen's font metrics, and
+            // painting it at another scale squeezes spaces (e.g. before inline code).
+            java.awt.geom.AffineTransform tx = app.frame().getGraphicsConfiguration().getDefaultTransform();
+            double sx = tx.getScaleX(), sy = tx.getScaleY();
+            BufferedImage bi = new BufferedImage((int) Math.ceil(c.getWidth() * sx), (int) Math.ceil(c.getHeight() * sy), BufferedImage.TYPE_INT_RGB);
             Graphics2D g = bi.createGraphics();
+            g.scale(sx, sy);
             c.paint(g);
             g.dispose();
             img[0] = bi;

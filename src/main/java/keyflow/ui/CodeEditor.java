@@ -257,6 +257,11 @@ public final class CodeEditor extends JComponent {
         return null;
     }
 
+    /** Feed keys in Vim notation as if typed (tests and the screenshot tool). */
+    void type(String notation) {
+        for (String k : VimEngine.tokenize(notation)) send(k);
+    }
+
     private void send(String k) {
         engine.key(k);
         if (engine.consumeBell()) {
