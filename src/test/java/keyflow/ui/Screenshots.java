@@ -96,6 +96,8 @@ public final class Screenshots {
         shot(out, "dark-vim.png");
         on(() -> app.showHome());
         shot(out, "dark-home.png");
+        ImageIO.write(AppIcon.image(256), "png", new File(out, "icon.png"));
+        System.out.println("  icon.png");
         System.out.println("Screenshots written to " + out.getAbsolutePath());
         System.exit(0);
     }

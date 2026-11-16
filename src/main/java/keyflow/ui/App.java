@@ -52,6 +52,8 @@ public final class App {
             return;
         }
         frame = new JFrame("Keyflow");
+        frame.setIconImages(AppIcon.images());
+        setDockIcon();
         frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         frame.addWindowListener(new WindowAdapter() {
             @Override
@@ -66,6 +68,18 @@ public final class App {
         frame.setSize(Math.min(1180, scr.width - 80), Math.min(860, scr.height - 80));
         frame.setMinimumSize(new Dimension(760, 560));
         frame.setLocationRelativeTo(null);
+    }
+
+    /** macOS dock / Linux taskbars that read the app icon instead of the window's. */
+    private static void setDockIcon() {
+        try {
+            if (java.awt.Taskbar.isTaskbarSupported()) {
+                java.awt.Taskbar tb = java.awt.Taskbar.getTaskbar();
+                if (tb.isSupported(java.awt.Taskbar.Feature.ICON_IMAGE)) tb.setIconImage(AppIcon.image(512));
+            }
+        } catch (RuntimeException ignored) {
+            // not supported on this desktop: the window icon is enough
+        }
     }
 
     /** Alt+Left goes back anywhere; Esc goes back on list screens (in lessons Esc belongs to Vim). */

@@ -1,4 +1,6 @@
-# Keyflow
+<p align="center"><img src="docs/images/icon.png" width="112" alt="Keyflow icon"></p>
+
+<h1 align="center">Keyflow</h1>
 
 **Learn to code and edit at the speed of thought, in short, focused sessions.**
 
