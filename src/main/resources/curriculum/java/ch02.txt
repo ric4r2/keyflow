@@ -1,0 +1,57 @@
+@unit J2 | The Java Programming Environment
+desc: Install the JDK, compile and run from the terminal, try code instantly with jshell.
+book: Core Java Vol. I, Chapter 2
+
+@lesson J2.1 | JDK, compiler and launcher
+book: Chapter 2, sections 2.1-2.2
+@card read | JDK vs JRE
+text: The **JDK** (Java Development Kit) has everything: the compiler `javac`, the launcher `java`, `jshell`, `jar`, `javadoc`...
+text: A **JRE** only runs programs. As a developer, always install a JDK.
+text: Check your install in a terminal:
+code:
+javac -version
+java -version
+@end
+@card read | Compile, then run
+text: Two steps from the terminal. The file name must match the public class name.
+code:
+javac Welcome.java     # creates Welcome.class
+java Welcome           # runs it (no .class extension!)
+@end
+text: Since Java 11 you can also run a single source file directly: `java Welcome.java`.
+@card quiz | You compiled Welcome.java. How do you run it?
+option: java Welcome.class
+option*: java Welcome
+option: javac Welcome
+option: run Welcome.java
+explain: The java launcher takes a class name, not a file name. Writing Welcome.class is a classic mistake.
+@card quiz | A public class named Greeter must be saved in...
+option: greeter.java
+option*: Greeter.java
+option: Main.java
+option: any file ending in .java
+explain: A public class must live in a file with exactly the same name, including capitalization.
+
+@lesson J2.2 | Trying code with jshell
+book: Chapter 2, section 2.5
+@card read | A playground in your terminal
+text: `jshell` (Java 9+) evaluates Java snippets instantly. No class, no main method.
+text: Perfect for testing an idea in five seconds.
+code:
+jshell> int x = 6 * 7
+x ==> 42
+jshell> "Java".length()
+$2 ==> 4
+jshell> /exit
+@end
+@card quiz | What do you need to wrap code in before running it in jshell?
+option: A class with a main method
+option: A package declaration
+option*: Nothing
+explain: jshell accepts plain expressions and statements, which makes it great for experimenting.
+@card type | Your first statement
+task: Type this statement exactly (it is what you would try in jshell).
+compile: stmt
+code:
+System.out.println("Hello, Java!");
+@end

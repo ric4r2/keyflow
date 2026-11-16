@@ -1,0 +1,317 @@
+@unit J5 | Inheritance
+desc: Build new classes from existing ones: extends, super, overriding, polymorphism, Object methods, ArrayList, wrappers, enums.
+book: Core Java Vol. I, Chapter 5
+
+@lesson J5.1 | Subclasses
+book: Chapter 5, section 5.1
+@card read | extends
+text: A subclass **is a** more specific superclass: it inherits fields and methods and adds its own.
+code:
+public class Shape {
+    public double area() { return 0; }
+}
+
+public class Circle extends Shape {
+    private double r;
+    public Circle(double r) { this.r = r; }
+    @Override
+    public double area() { return Math.PI * r * r; }
+}
+@end
+@card read | super
+text: `super(...)` calls the superclass constructor (must be the first statement). `super.method()` calls the superclass version of a method.
+code:
+public class SavingsAccount extends Account {
+    public SavingsAccount(String owner) {
+        super(owner);
+    }
+}
+@end
+@card quiz | Where must super(...) appear in a constructor?
+option: Anywhere
+option*: As the first statement
+option: As the last statement
+explain: The superclass part of the object is built first, so super(...) must come first.
+@card read | Overriding and @Override
+text: A subclass can **override** a method by declaring one with the same signature.
+text: Always add `@Override`: the compiler then catches typos like `aera()` that would silently create a new method.
+@card fix | Typo in an override
+task: @Override reports "method does not override a method from its superclass". Fix the method name.
+compile: body
+start:
+static class Shape {
+    double area() { return 0; }
+}
+
+static class Square extends Shape {
+    double side = 2;
+
+    @Override
+    double aera() { return side * side; }
+}
+@end
+answer:
+static class Shape {
+    double area() { return 0; }
+}
+
+static class Square extends Shape {
+    double side = 2;
+
+    @Override
+    double area() { return side * side; }
+}
+@end
+
+@lesson J5.2 | Polymorphism
+book: Chapter 5, section 5.1.5-5.1.7
+@card read | One variable, many forms
+text: A superclass variable can hold any subclass object. The method that runs depends on the **actual object** (dynamic binding).
+code:
+Shape[] shapes = { new Circle(1), new Square(2) };
+for (Shape s : shapes) {
+    System.out.println(s.area());  // Circle.area, then Square.area
+}
+@end
+@card quiz | Shape s = new Circle(1); s.area() runs which method?
+option: Shape.area
+option*: Circle.area
+option: Neither, it does not compile
+explain: Dynamic binding chooses the method of the actual object, which is a Circle.
+@card read | final classes and methods
+text: A `final` class cannot be extended (`String` is final). A `final` method cannot be overridden.
+@card read | Casting
+text: To use subclass-only methods, cast down. Check first with `instanceof`.
+code:
+if (shape instanceof Circle) {
+    Circle c = (Circle) shape;
+    c.radius();
+}
+if (shape instanceof Circle c) {   // Java 16+: test and cast in one step
+    c.radius();
+}
+@end
+@card quiz | What happens with (Circle) s when s actually holds a Square?
+option: It returns null
+option*: ClassCastException at run time
+option: It converts the square into a circle
+explain: A cast never converts objects. A wrong cast throws ClassCastException, which is why you test with instanceof first.
+
+@lesson J5.3 | Abstract classes and protected
+book: Chapter 5, sections 5.1.9-5.1.10
+@card read | abstract
+text: An `abstract` method has no body. A class with one must be `abstract`, and you cannot create its objects with `new`.
+code:
+public abstract class Shape {
+    public abstract double area();       // every subclass must implement it
+    public String describe() {
+        return "Area: " + area();
+    }
+}
+@end
+@card quiz | Can you write new Shape() if Shape is abstract?
+option: Yes
+option*: No
+explain: Abstract classes cannot be instantiated; you create objects of concrete subclasses.
+@card write | Implement the abstract method
+task: Complete class Rect so it compiles: implement `area()` returning `w * h`.
+compile: body
+check: double\s+area\s*\(\s*\)\s*\{
+check: return\s+w\s*\*\s*h
+start:
+static abstract class Shape {
+    abstract double area();
+}
+
+static class Rect extends Shape {
+    double w = 2, h = 3;
+}
+@end
+answer:
+static abstract class Shape {
+    abstract double area();
+}
+
+static class Rect extends Shape {
+    double w = 2, h = 3;
+
+    @Override
+    double area() {
+        return w * h;
+    }
+}
+@end
+@card read | Access levels
+text: - `private`: this class only.
+text: - (none): this package.
+text: - `protected`: this package and subclasses.
+text: - `public`: everyone.
+
+@lesson J5.4 | Object: equals, hashCode, toString
+book: Chapter 5, section 5.2
+@card read | The cosmic superclass
+text: Every class extends `Object`, so every object has `equals`, `hashCode` and `toString`.
+text: The defaults compare identity and print something like `Point@1b6d3586`. Override them for value classes.
+@card read | A good equals and hashCode
+code:
+@Override
+public boolean equals(Object o) {
+    if (this == o) return true;
+    if (!(o instanceof Point)) return false;
+    Point p = (Point) o;
+    return x == p.x && y == p.y;
+}
+
+@Override
+public int hashCode() {
+    return Objects.hash(x, y);
+}
+@end
+text: Rule: equal objects **must** have equal hash codes, otherwise HashMap and HashSet break.
+@card quiz | You override equals but not hashCode. What breaks?
+option: Nothing
+option*: Hash-based collections such as HashSet and HashMap
+option: toString
+explain: HashSet looks in the bucket given by hashCode before calling equals. Equal objects with different hash codes are not found.
+@card write | toString
+task: Override `toString()` so a Point prints like `(1, 2)`.
+compile: body
+check: public\s+String\s+toString\s*\(\s*\)
+check: return
+start:
+static class Point {
+    int x = 1, y = 2;
+}
+@end
+answer:
+static class Point {
+    int x = 1, y = 2;
+
+    @Override
+    public String toString() {
+        return "(" + x + ", " + y + ")";
+    }
+}
+@end
+
+@lesson J5.5 | ArrayList
+book: Chapter 5, section 5.3
+@card read | A resizable array
+code:
+ArrayList<String> names = new ArrayList<>();
+names.add("Ada");
+names.add("Linus");
+String first = names.get(0);
+names.set(1, "Grace");
+names.remove(0);
+int n = names.size();          // size(), not length
+for (String s : names) { ... }
+@end
+@card quiz | How do you get the number of elements of an ArrayList?
+option: list.length
+option: list.length()
+option*: list.size()
+option: list.count
+explain: Arrays use the field length; strings use length(); collections use size().
+@card type | Build a list
+task: Type the list code.
+compile: stmt
+code:
+List<String> langs = new ArrayList<>();
+langs.add("Java");
+langs.add("Python");
+for (String lang : langs) {
+    System.out.println(lang);
+}
+@end
+@card fix | Primitive type argument
+task: Type arguments cannot be primitives. Fix the declaration.
+hint: Use the wrapper class Integer.
+compile: stmt
+start:
+ArrayList<int> scores = new ArrayList<>();
+scores.add(10);
+@end
+answer:
+ArrayList<Integer> scores = new ArrayList<>();
+scores.add(10);
+@end
+
+@lesson J5.6 | Wrappers and autoboxing
+book: Chapter 5, section 5.4
+@card read | Integer, Double, Boolean...
+text: Each primitive has a wrapper class. Java converts automatically: **autoboxing** (int to Integer) and **unboxing**.
+code:
+List<Integer> list = new ArrayList<>();
+list.add(3);                 // autoboxed to Integer.valueOf(3)
+int n = list.get(0);         // unboxed
+int parsed = Integer.parseInt("42");
+@end
+@card read | The == trap
+text: Wrappers are objects: compare them with `equals`, not `==`.
+code:
+Integer a = 1000, b = 1000;
+System.out.println(a == b);       // false (different objects)
+System.out.println(a.equals(b));  // true
+@end
+@card quiz | Which converts the String "17" to an int?
+option: (int) "17"
+option*: Integer.parseInt("17")
+option: "17".toInt()
+explain: Integer.parseInt parses a string. Casting a String to int is not allowed.
+
+@lesson J5.7 | Varargs and enums
+book: Chapter 5, sections 5.5-5.6
+@card read | Variable arguments
+code:
+static int sum(int... values) {      // values is an int[]
+    int total = 0;
+    for (int v : values) total += v;
+    return total;
+}
+sum(1, 2, 3);   // 6
+sum();          // 0
+@end
+@card read | Enumerations
+text: An `enum` lists a fixed set of constants. Enums can have fields, constructors and methods.
+code:
+public enum Size {
+    SMALL("S"), MEDIUM("M"), LARGE("L");
+
+    private final String code;
+    Size(String code) { this.code = code; }
+    public String getCode() { return code; }
+}
+Size s = Size.valueOf("LARGE");
+for (Size each : Size.values()) { ... }
+@end
+@card quiz | How do you compare two enum values?
+option*: == is fine
+option: Only with equals
+option: With compareTo only
+explain: Each enum constant exists exactly once, so == is safe and clear.
+@card write | Days enum
+task: Declare an enum `Day` with the constants MON, TUE, WED.
+compile: body
+check: enum\s+Day\s*\{
+check: MON\s*,\s*TUE\s*,\s*WED
+start:
+@end
+answer:
+enum Day { MON, TUE, WED }
+@end
+
+@lesson J5.8 | Reflection and design tips
+book: Chapter 5, sections 5.7-5.8
+@card read | Reflection (a glimpse)
+text: Reflection lets a program inspect classes at run time: `obj.getClass().getName()`, list fields and methods, create objects by name.
+text: Frameworks (Spring, JUnit) use it heavily. In everyday code you rarely need it.
+@card read | Inheritance design tips
+text: - Put common behavior in the superclass.
+text: - Do not use protected fields.
+text: - Use inheritance only for a true "is-a" relationship.
+text: - Prefer polymorphism over `if (x instanceof A) ... else if (x instanceof B)`.
+@card quiz | A Stack class extends ArrayList to reuse code. Good idea?
+option: Yes, reuse is always good
+option*: No, a stack is not a list: it would expose operations like add at an index
+explain: Inheritance is for is-a relationships. Holding an ArrayList field (composition) is the better design.

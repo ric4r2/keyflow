@@ -1,0 +1,78 @@
+@unit J1 | An Introduction to Java
+desc: What Java is, why it looks the way it does, and where it runs.
+book: Core Java Vol. I, Chapter 1
+
+@lesson J1.1 | Java is a platform
+book: Chapter 1, sections 1.1-1.2
+@card read | More than a language
+text: Java is two things: a **language** you write, and a **platform** that runs it.
+text: The platform is the JVM (Java Virtual Machine) plus a huge standard library: collections, networking, files, dates, concurrency...
+text: You get both when you install a JDK.
+@card read | Write once, run anywhere
+text: `javac` compiles your `.java` file into **bytecode** (`.class` files), not into machine code.
+text: The JVM reads that bytecode on Windows, macOS or Linux and turns it into native code as it runs (just-in-time compilation).
+text: Same `.class` file, any operating system.
+code:
+Hello.java  --javac-->  Hello.class  --java (JVM)-->  runs on any OS
+@end
+@card quiz | What does javac produce?
+option: Native machine code for your CPU
+option*: Bytecode in .class files
+option: A Windows .exe file
+option: JavaScript
+explain: javac produces bytecode. The JVM translates bytecode to machine code at run time, which is why the same class file runs everywhere.
+@card quiz | What makes Java portable?
+option: Every OS has its own Java language
+option*: The JVM runs the same bytecode on every OS
+option: Java code is interpreted by the browser
+explain: The bytecode format and the sizes of primitive types are fixed by the specification, and each OS has a JVM that runs it.
+
+@lesson J1.2 | The design goals
+book: Chapter 1, section 1.2
+@card read | The "buzzwords"
+text: Java's designers summarized their goals in a list of adjectives. The ones that still matter most:
+text: - **Object-oriented**: programs are built from classes and objects.
+text: - **Robust**: no pointer arithmetic, automatic memory management (garbage collection), strong compile-time checking.
+text: - **Portable**: an `int` is always 32 bits, on every machine.
+text: - **Multithreaded**: threads are built into the language and library.
+@card quiz | Who frees memory you no longer use?
+option: You, with free()
+option: The operating system, when the program ends only
+option*: The garbage collector
+explain: Java has no free() or delete. The garbage collector reclaims objects that are no longer reachable.
+@card quiz | How many bits is an int in Java?
+option: Depends on the CPU
+option: 16
+option*: 32, everywhere
+option: 64
+explain: Java fixes the size of every primitive type. int is always 32 bits, long is always 64 bits.
+@card read | Java is not JavaScript
+text: Despite the name, JavaScript is a completely different language that runs in browsers.
+text: Java is statically typed: every variable has a type known at compile time, and the compiler checks it.
+code:
+int count = 3;        // count can only ever hold an int
+count = "three";      // compile error: incompatible types
+@end
+@card quiz | Which statement is true?
+option: Java and JavaScript are the same language
+option*: Java checks variable types at compile time
+option: Java programs only run in browsers
+explain: Java is statically typed and compiled to bytecode. JavaScript is a different, dynamically typed language.
+
+@lesson J1.3 | A short history
+book: Chapter 1, sections 1.4-1.5
+@card read | Versions you will hear about
+text: Java 1.0 shipped in 1996. Big milestones: generics (Java 5), lambdas and streams (Java 8), modules and `jshell` (Java 9), `var` (Java 10).
+text: Since Java 9 a new version ships every six months. Some are **LTS** (long-term support): 11, 17, 21, 25.
+text: Most companies run an LTS version.
+@card quiz | Which Java version introduced lambda expressions?
+option: Java 1.0
+option: Java 5
+option*: Java 8
+option: Java 11
+explain: Java 8 (2014) added lambda expressions and the streams library.
+@card quiz | What does LTS mean?
+option: Light Test Suite
+option*: Long-Term Support
+option: Last Tested Snapshot
+explain: LTS releases receive updates for years; companies usually standardize on them.

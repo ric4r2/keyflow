@@ -1,0 +1,653 @@
+@unit J3 | Fundamental Programming Structures
+desc: The building blocks: types, variables, operators, strings, input and output, control flow, arrays.
+book: Core Java Vol. I, Chapter 3
+
+@lesson J3.1 | Anatomy of a Java program
+book: Chapter 3, section 3.1
+@card read | The smallest program
+text: Every Java program lives inside a **class**. Execution starts in `main`.
+code:
+public class Greeter {
+    public static void main(String[] args) {
+        System.out.println("Ready to learn Java");
+    }
+}
+@end
+text: Java is **case-sensitive**: `Main` and `main` are different names.
+@card read | Reading the pieces
+text: - `public`: other code may use it (an access modifier).
+text: - `class Greeter`: a class name, written in CamelCase.
+text: - `static void main(String[] args)`: the entry point; `void` means it returns nothing.
+text: - `{ }` braces delimit blocks. Every statement ends with `;`.
+@card quiz | Where does a Java program start running?
+option: At the first line of the file
+option*: In the main method
+option: In the constructor
+option: In the class with the shortest name
+explain: The JVM calls public static void main(String[] args) of the class you launch.
+@card type | Type the program
+task: Type the whole program. Indentation is free: only the code matters.
+compile: class
+code:
+public class Greeter {
+    public static void main(String[] args) {
+        System.out.println("Ready to learn Java");
+    }
+}
+@end
+@card fix | Missing semicolon
+task: The compiler says "';' expected". Fix it.
+hint: Every statement ends with a semicolon.
+compile: stmt
+start:
+System.out.println("Hi")
+@end
+answer:
+System.out.println("Hi");
+@end
+
+@lesson J3.2 | Comments
+book: Chapter 3, section 3.2
+@card read | Three kinds of comments
+code:
+// to the end of the line
+/* a block
+   comment */
+/**
+ * A documentation comment, read by javadoc.
+ */
+@end
+text: Block comments do **not** nest: `/* /* */ */` breaks.
+@card quiz | Which comment is used to generate documentation?
+option: // comment
+option: /* comment */
+option*: /** comment */
+explain: Comments that start with /** are extracted by the javadoc tool.
+
+@lesson J3.3 | Primitive types
+book: Chapter 3, section 3.3
+@card read | Eight primitive types
+text: Integers: `byte` (8 bits), `short` (16), `int` (32), `long` (64).
+text: Floating point: `float` (32), `double` (64). Character: `char` (16-bit UTF-16 code unit). Logic: `boolean` (`true`/`false`).
+text: Use `int` and `double` unless you have a reason not to.
+@card read | Literals
+code:
+long big = 4_000_000_000L;  // L suffix for long; _ for readability
+int hex = 0xCAFE;           // hexadecimal
+int bin = 0b1010;           // binary
+float f = 3.14F;            // F suffix for float
+double d = 3.14;            // double by default
+char c = 'A';               // single quotes for char
+@end
+@card quiz | Which type would you use for a value like 3.75?
+option: int
+option: char
+option*: double
+option: boolean
+explain: double is the default floating-point type. float has less precision and needs an F suffix.
+@card quiz | What does this line need to compile? long x = 9000000000;
+option: Nothing, it is fine
+option*: An L suffix: 9000000000L
+option: A cast to int
+explain: An integer literal without a suffix is an int. 9 billion does not fit in an int, so it needs L.
+@card read | boolean is not a number
+text: In Java you cannot use an `int` as a condition. `if (x)` does not compile when `x` is an int; write `if (x != 0)`.
+text: `double` cannot represent some decimals exactly: `2.0 - 1.1` prints `0.8999999999999999`. For money, use `BigDecimal` (lesson J3.12).
+@card fix | Integer as condition
+task: Make the condition valid Java.
+hint: Compare the int with 0.
+compile: stmt
+start:
+int count = 3;
+if (count) {
+    System.out.println("not zero");
+}
+@end
+answer:
+int count = 3;
+if (count != 0) {
+    System.out.println("not zero");
+}
+@end
+
+@lesson J3.4 | Variables and constants
+book: Chapter 3, section 3.4
+@card read | Declare, then initialize
+text: A variable has a type and a name. You must assign it before reading it.
+code:
+int lives;                 // declared
+lives = 3;                 // initialized
+double speed = 2.5;        // both at once
+var name = "Ada";          // Java 10+: type inferred (String)
+@end
+text: Names start with a letter, are case-sensitive and use camelCase.
+@card read | Constants with final
+text: `final` means "assign once". By convention constants are UPPER_CASE.
+text: `static final` inside a class makes a class constant shared by all methods.
+code:
+final int SECONDS_PER_MINUTE = 60;
+public static final int MAX_USERS = 100;
+@end
+@card quiz | What happens when you read a local variable that was never assigned?
+option: It is 0
+option: It is null
+option*: Compile error
+explain: Java refuses to compile code that may read an uninitialized local variable.
+@card type | Declare a constant
+task: Type the constant declaration.
+compile: body
+code:
+public static final int SECONDS_PER_MINUTE = 60;
+@end
+@card write | Your own variables
+task: Declare an `int` named `age` with value `30` and a `String` named `city` with value "Lima".
+hint: Type name = value;
+compile: stmt
+check: \bint\s+age\s*=\s*30\s*;
+check: \bString\s+city\s*=\s*"Lima"\s*;
+start:
+// write your declarations below
+@end
+answer:
+int age = 30;
+String city = "Lima";
+@end
+
+@lesson J3.5 | Operators
+book: Chapter 3, section 3.5
+@card read | Arithmetic
+text: `+ - * /` and `%` (remainder). Integer division **truncates**: `7 / 2` is `3`, `7 % 2` is `1`.
+text: If either side is a double, the result is a double: `7 / 2.0` is `3.5`.
+code:
+int q = 17 / 5;     // 3
+int r = 17 % 5;     // 2
+double d = 17 / 5.0; // 3.4
+@end
+@card quiz | What is the value of 9 / 2 in Java?
+code:
+int result = 9 / 2;
+@end
+option: 4.5
+option*: 4
+option: 5
+explain: Both operands are ints, so the division truncates toward zero.
+@card read | Math, casts and conversions
+code:
+double root = Math.sqrt(16);      // 4.0
+double p = Math.pow(2, 10);       // 1024.0
+double x = 9.997;
+int n = (int) x;                  // 9: cast truncates
+int rounded = (int) Math.round(x);// 10
+@end
+text: Widening (int to double) is automatic. Narrowing (double to int) needs an explicit **cast**.
+@card quiz | What is (int) 3.99?
+option*: 3
+option: 4
+option: 3.99
+explain: A cast to int simply drops the fractional part.
+@card read | Shortcuts and comparisons
+code:
+x += 4;      // x = x + 4
+n++;         // add 1 (also n--)
+a == b       // equal?    a != b  // not equal?
+a < b && b < c   // AND, short-circuit
+a < b || flag    // OR, short-circuit
+!done            // NOT
+int max = (a > b) ? a : b;  // conditional operator
+@end
+@card quiz | With && , when is the right side evaluated?
+option: Always
+option*: Only when the left side is true
+option: Only when the left side is false
+explain: && short-circuits: if the left side is false the result is false, so the right side is skipped. That is why x != 0 && 1 / x > 0 is safe.
+@card fix | Lost precision
+task: The compiler complains about a possible lossy conversion. Keep the int variable and fix it with a cast.
+hint: (int) before the expression.
+compile: stmt
+start:
+double price = 9.99;
+int whole = price;
+@end
+answer:
+double price = 9.99;
+int whole = (int) price;
+@end
+@card write | Average of two ints
+task: Given `int a = 7; int b = 4;` declare `double avg` holding their exact average (5.5).
+hint: Divide by 2.0, not 2, so the division is not truncated.
+compile: stmt
+check: double\s+avg\s*=
+check: 2\.0|\(double\)
+start:
+int a = 7;
+int b = 4;
+@end
+answer:
+int a = 7;
+int b = 4;
+double avg = (a + b) / 2.0;
+@end
+
+@lesson J3.6 | Strings
+book: Chapter 3, section 3.6
+@card read | Strings are objects
+text: A `String` is a sequence of characters. Strings are **immutable**: methods return new strings, they never change the original.
+code:
+String greeting = "Hello";
+String s = greeting.substring(0, 3);  // "Hel" (end index excluded)
+int n = greeting.length();            // 5
+char first = greeting.charAt(0);      // 'H'
+String all = "Java" + 11;             // "Java11"
+@end
+@card quiz | What is "Hello".substring(1, 4)?
+option: "Hell"
+option*: "ell"
+option: "ello"
+option: "Hel"
+explain: substring(begin, end) includes begin and excludes end: characters 1, 2 and 3.
+@card read | Never compare strings with ==
+text: `==` checks whether two references point to the **same object**. To compare contents use `equals`.
+code:
+if (input.equals("yes")) { ... }           // correct
+if (input.equalsIgnoreCase("YES")) { ... } // ignores case
+if (input == "yes") { ... }                // BUG: may be false!
+@end
+@card fix | String comparison bug
+task: This comparison may fail even when command contains "quit". Fix it.
+hint: Use the equals method.
+compile: stmt
+start:
+String command = new String("quit");
+if (command == "quit") {
+    System.out.println("bye");
+}
+@end
+answer:
+String command = new String("quit");
+if (command.equals("quit")) {
+    System.out.println("bye");
+}
+@end
+answer:
+String command = new String("quit");
+if ("quit".equals(command)) {
+    System.out.println("bye");
+}
+@end
+@card read | Empty, null and useful methods
+text: `""` is an empty string (length 0). `null` means "no object at all": calling a method on it throws `NullPointerException`.
+code:
+if (str != null && !str.isEmpty()) { ... }
+"  trim me ".strip();        // "trim me" (Java 11)
+"a,b,c".split(",");          // ["a", "b", "c"]
+"java".toUpperCase();        // "JAVA"
+"banana".indexOf("an");      // 1
+String.join("/", "a", "b");  // "a/b"
+"ab".repeat(3);              // "ababab" (Java 11)
+@end
+@card quiz | Why write str != null && !str.isEmpty() in this order?
+option: It is faster to type
+option*: If str is null, the right side never runs, so no NullPointerException
+option: isEmpty must always come last
+explain: && stops at the first false. Checking null first protects the method call.
+@card read | Building strings efficiently
+text: Concatenating in a loop creates many temporary strings. Use `StringBuilder` instead.
+code:
+StringBuilder sb = new StringBuilder();
+for (int i = 0; i < 3; i++) {
+    sb.append(i).append(',');
+}
+String result = sb.toString();   // "0,1,2,"
+@end
+@card type | StringBuilder loop
+task: Type the StringBuilder loop.
+compile: stmt
+code:
+StringBuilder sb = new StringBuilder();
+for (int i = 0; i < 3; i++) {
+    sb.append(i).append(',');
+}
+String result = sb.toString();
+@end
+@card write | Initials
+task: Given `String first = "Grace"; String last = "Hopper";` declare `String initials` equal to "GH" using charAt.
+hint: "" + first.charAt(0) + last.charAt(0)  (the "" forces string concatenation instead of adding char codes)
+compile: stmt
+check: String\s+initials\s*=
+check: charAt\(0\)
+start:
+String first = "Grace";
+String last = "Hopper";
+@end
+answer:
+String first = "Grace";
+String last = "Hopper";
+String initials = "" + first.charAt(0) + last.charAt(0);
+@end
+
+@lesson J3.7 | Input and output
+book: Chapter 3, section 3.7
+@card read | Reading input with Scanner
+code:
+import java.util.Scanner;
+
+Scanner in = new Scanner(System.in);
+System.out.print("What is your name? ");
+String name = in.nextLine();     // whole line
+System.out.print("How old are you? ");
+int age = in.nextInt();          // one int
+@end
+text: Also `next()` (one word) and `nextDouble()`.
+@card read | Formatted output with printf
+code:
+double ratio = 2.0 / 3.0;
+System.out.printf("%6.2f%n", ratio);      //   0.67
+System.out.printf("%s has %d points%n", player, score);
+String msg = String.format("%05d", 42);   // "00042"
+@end
+text: `%d` integer, `%f` floating point, `%s` string, `%n` newline, `%.2f` two decimals.
+@card quiz | Which format specifier prints a double with 2 decimals?
+option: %d
+option: %2d
+option*: %.2f
+option: %s.2
+explain: %.2f means floating point with 2 digits after the decimal point.
+@card type | printf practice
+task: Type the printf statement.
+compile: stmt
+code:
+String player = "Ada";
+int score = 36;
+System.out.printf("%s has %d points%n", player, score);
+@end
+@card read | Files
+text: Read and write whole files with `java.nio.file.Files` and `Path`. These methods throw `IOException` (chapter 7 explains exceptions).
+code:
+String content = Files.readString(Path.of("myfile.txt"));        // Java 11
+List<String> lines = Files.readAllLines(Path.of("myfile.txt"));
+Files.writeString(Path.of("out.txt"), "Hello");
+@end
+
+@lesson J3.8 | if and blocks
+book: Chapter 3, sections 3.8.1-3.8.2
+@card read | Blocks and scope
+text: A block `{ ... }` groups statements. A variable declared in a block exists only inside it.
+text: Java does not allow redeclaring a variable from an enclosing block inside a nested block.
+@card read | if / else if / else
+code:
+if (score >= 90) {
+    grade = "A";
+} else if (score >= 80) {
+    grade = "B";
+} else {
+    grade = "C";
+}
+@end
+text: Always use braces, even for one statement. It prevents bugs when you add a second line later.
+@card quiz | What does this print when x is 5?
+code:
+if (x > 10)
+    System.out.println("big");
+    System.out.println("done");
+@end
+option: Nothing
+option*: done
+option: big then done
+explain: Without braces only the first statement belongs to the if. Indentation means nothing to the compiler.
+@card write | Even or odd
+task: Given `int n = 7;` print "even" if n is even, otherwise "odd".
+hint: n % 2 == 0
+compile: stmt
+check: if\s*\(\s*n\s*%\s*2\s*==\s*0\s*\)|if\s*\(\s*n\s*%\s*2\s*!=\s*0\s*\)
+check: else
+start:
+int n = 7;
+@end
+answer:
+int n = 7;
+if (n % 2 == 0) {
+    System.out.println("even");
+} else {
+    System.out.println("odd");
+}
+@end
+
+@lesson J3.9 | Loops
+book: Chapter 3, sections 3.8.3-3.8.4
+@card read | while and do-while
+code:
+while (fuel > 0) {            // checks first, may run 0 times
+    fuel -= burnRate;
+    seconds++;
+}
+
+do {                          // runs at least once
+    input = in.nextLine();
+} while (!input.equals("q"));
+@end
+@card read | The for loop
+text: Three parts: initialization; condition; update.
+code:
+for (int i = 1; i <= 10; i++) {
+    System.out.println(i);
+}
+// i does not exist here
+@end
+@card quiz | How many times does this loop run?
+code:
+for (int i = 0; i < 5; i++) { ... }
+@end
+option: 4
+option*: 5
+option: 6
+explain: i takes the values 0, 1, 2, 3, 4: five iterations.
+@card type | Lap counter
+task: Type the countdown loop.
+compile: stmt
+code:
+for (int lap = 5; lap > 0; lap--) {
+    System.out.println("Laps left: " + lap);
+}
+System.out.println("Finish line!");
+@end
+@card fix | Infinite loop
+task: This loop never ends. Fix the update so it counts up to 5.
+hint: The update should increase i.
+compile: stmt
+start:
+for (int i = 0; i < 5; i--) {
+    System.out.println(i);
+}
+@end
+answer:
+for (int i = 0; i < 5; i++) {
+    System.out.println(i);
+}
+@end
+@card write | Sum 1 to 100
+task: Compute the sum of 1..100 into an `int sum` with a for loop (the result is 5050).
+hint: int sum = 0; then for (int i = 1; i <= 100; i++) sum += i;
+compile: stmt
+check: int\s+sum\s*=\s*0
+check: for\s*\(
+check: sum\s*\+=|sum\s*=\s*sum\s*\+
+start:
+@end
+answer:
+int sum = 0;
+for (int i = 1; i <= 100; i++) {
+    sum += i;
+}
+@end
+
+@lesson J3.10 | switch, break and continue
+book: Chapter 3, sections 3.8.5-3.8.6
+@card read | The classic switch
+text: Each `case` needs a `break`, otherwise execution **falls through** to the next case.
+code:
+switch (choice) {
+    case 1:
+        System.out.println("one");
+        break;
+    case 2:
+        System.out.println("two");
+        break;
+    default:
+        System.out.println("other");
+}
+@end
+@card quiz | choice is 1 and there are no break statements. What prints?
+code:
+switch (choice) {
+    case 1: System.out.println("one");
+    case 2: System.out.println("two");
+    default: System.out.println("other");
+}
+@end
+option: one
+option*: one, two and other
+option: other
+explain: Without break, execution falls through every following case. This is a common bug.
+@card read | Modern switch (Java 14+)
+text: The arrow form has no fall-through and can produce a value.
+code:
+String size = switch (n) {
+    case 1, 2 -> "small";
+    case 3 -> "medium";
+    default -> "large";
+};
+@end
+@card read | break and continue
+text: `break` leaves the loop immediately. `continue` skips to the next iteration.
+code:
+for (int i = 0; i < 10; i++) {
+    if (i % 2 == 0) continue;   // skip even numbers
+    if (i > 7) break;           // stop after 7
+    System.out.println(i);      // 1 3 5 7
+}
+@end
+@card fix | Add the missing break
+task: Option 1 also prints "two". Add the missing break.
+compile: stmt
+start:
+int choice = 1;
+switch (choice) {
+    case 1:
+        System.out.println("one");
+    case 2:
+        System.out.println("two");
+        break;
+}
+@end
+answer:
+int choice = 1;
+switch (choice) {
+    case 1:
+        System.out.println("one");
+        break;
+    case 2:
+        System.out.println("two");
+        break;
+}
+@end
+
+@lesson J3.11 | Arrays
+book: Chapter 3, section 3.10
+@card read | Creating arrays
+text: An array holds a fixed number of values of one type. Indexes go from `0` to `length - 1`.
+code:
+int[] a = new int[100];          // 100 zeros
+int[] primes = {2, 3, 5, 7};     // initializer
+String[] names = new String[3];  // 3 nulls
+a[0] = 42;
+int n = primes.length;           // 4 (a field, no parentheses)
+@end
+@card quiz | int[] a = new int[5]; Which index is invalid?
+option: a[0]
+option: a[4]
+option*: a[5]
+explain: Indexes run from 0 to 4. a[5] throws ArrayIndexOutOfBoundsException.
+@card read | Looping over arrays
+code:
+for (int i = 0; i < a.length; i++) {
+    System.out.println(a[i]);
+}
+for (int element : a) {          // "for each"
+    System.out.println(element);
+}
+System.out.println(Arrays.toString(a));  // [2, 3, 5, 7]
+@end
+@card read | Copy, sort, 2D
+code:
+int[] copy = Arrays.copyOf(primes, primes.length);
+int[] alias = primes;            // NOT a copy: same array!
+Arrays.sort(data);
+int[][] grid = new int[3][4];    // 3 rows, 4 columns
+grid[1][2] = 9;
+@end
+text: Assigning an array variable copies the **reference**, not the elements.
+@card quiz | int[] b = a; b[0] = 99; What is a[0] now?
+option: unchanged
+option*: 99
+option: compile error
+explain: a and b refer to the same array object. Use Arrays.copyOf for an independent copy.
+@card type | for-each
+task: Type the enhanced for loop.
+compile: stmt
+code:
+int[] primes = {2, 3, 5, 7, 11};
+for (int p : primes) {
+    System.out.println(p);
+}
+@end
+@card write | Largest element
+task: Given `int[] values = {4, 9, 2, 7};` find the largest into `int max` using a loop.
+hint: Start with max = values[0], then compare each element.
+compile: stmt
+check: int\s+max\s*=
+check: for\s*\(
+check: (>|Math\.max)
+start:
+int[] values = {4, 9, 2, 7};
+@end
+answer:
+int[] values = {4, 9, 2, 7};
+int max = values[0];
+for (int v : values) {
+    if (v > max) {
+        max = v;
+    }
+}
+@end
+@card fix | Off by one
+task: This loop throws ArrayIndexOutOfBoundsException. Fix the condition.
+hint: The last valid index is length - 1.
+compile: stmt
+start:
+int[] a = {1, 2, 3};
+for (int i = 0; i <= a.length; i++) {
+    System.out.println(a[i]);
+}
+@end
+answer:
+int[] a = {1, 2, 3};
+for (int i = 0; i < a.length; i++) {
+    System.out.println(a[i]);
+}
+@end
+
+@lesson J3.12 | Big numbers
+book: Chapter 3, section 3.9
+@card read | BigInteger and BigDecimal
+text: When `long` is too small or `double` is not exact enough, use `java.math.BigInteger` and `BigDecimal`.
+text: They are objects, so you use methods instead of operators.
+code:
+BigDecimal price = new BigDecimal("19.99");
+BigDecimal total = price.multiply(new BigDecimal("3"));  // 59.97 exactly
+BigInteger huge = BigInteger.valueOf(2).pow(100);
+@end
+@card quiz | Why create BigDecimal from the string "0.1" instead of the double 0.1?
+option: Strings are faster
+option*: The double 0.1 is already inexact; the string keeps the exact value
+option: BigDecimal has no double constructor
+explain: new BigDecimal(0.1) captures the binary approximation 0.1000000000000000055... Use the String constructor or BigDecimal.valueOf.

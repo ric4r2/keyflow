@@ -1,0 +1,63 @@
+@unit J10 | Graphical User Interface Programming
+desc: Windows, drawing and events with Swing (the toolkit this trainer itself is built with).
+book: Core Java Vol. I, Chapter 10
+
+@lesson J10.1 | Frames
+book: Chapter 10, sections 10.1-10.2
+@card read | Swing in a nutshell
+text: Swing is Java's built-in desktop UI toolkit (in `javax.swing`). A top-level window is a `JFrame`.
+text: Swing code must run on the **event dispatch thread**: start it with `EventQueue.invokeLater`.
+code:
+EventQueue.invokeLater(() -> {
+    JFrame frame = new JFrame("My App");
+    frame.setSize(400, 300);
+    frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    frame.setVisible(true);
+});
+@end
+@card quiz | On which thread should Swing components be created and changed?
+option: The main thread
+option*: The event dispatch thread
+option: Any thread
+explain: Swing is not thread-safe; all UI work belongs on the event dispatch thread (EventQueue.invokeLater).
+
+@lesson J10.2 | Drawing
+book: Chapter 10, section 10.3
+@card read | paintComponent
+text: To draw, extend `JComponent` and override `paintComponent`. Swing calls it whenever the area must be repainted; you call `repaint()` to request it.
+code:
+class Canvas extends JComponent {
+    @Override
+    protected void paintComponent(Graphics g) {
+        Graphics2D g2 = (Graphics2D) g;
+        g2.setColor(new Color(60, 110, 160));
+        g2.fill(new Rectangle2D.Double(20, 20, 120, 60));
+        g2.drawString("Hello", 30, 110);
+    }
+}
+@end
+@card quiz | How do you ask Swing to redraw a component?
+option: Call paintComponent directly
+option*: Call repaint()
+option: Create a new frame
+explain: repaint() schedules a paint on the event thread; never call paintComponent yourself.
+
+@lesson J10.3 | Events
+book: Chapter 10, section 10.4
+@card read | Listeners
+text: A component fires **events**; you register a **listener** that reacts. With lambdas it is one line.
+code:
+JButton button = new JButton("Save");
+button.addActionListener(e -> save());
+@end
+text: Other listeners: `MouseListener`, `KeyListener`, `WindowListener`... Adapter classes (`MouseAdapter`) let you override only what you need.
+@card type | Button with a listener
+task: Type the button code.
+compile: stmt
+code:
+javax.swing.JButton button = new javax.swing.JButton("Click me");
+button.addActionListener(e -> System.out.println("clicked"));
+@end
+@card read | Actions and preferences
+text: An `Action` bundles a command with its name, icon and keyboard shortcut, and can be shared by a button and a menu item.
+text: `java.util.prefs.Preferences` stores small settings (window size, last file) per user.

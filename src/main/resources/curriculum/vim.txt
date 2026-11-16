@@ -1,0 +1,1563 @@
+# Vim track. Ordered from absolute beginner to master.
+# Each @ex has a reference "solution" that the test suite replays to prove the drill is solvable.
+# The par (keystroke target) defaults to the length of the solution.
+
+@unit V1 | Survival: modes and movement
+desc: Vim is modal. In NORMAL mode every key is a command; in INSERT mode keys type text. Learn to move without arrow keys and to escape.
+
+@lesson V1.1 | Move with h j k l
+intro: You start in **NORMAL** mode. Keys here are commands, not text.
+intro: `h` = left, `j` = down, `k` = up, `l` = right. Keep your fingers on the home row: `j` looks like a down arrow.
+intro: The goal marker (green box) shows where the cursor must end up.
+keys: h j k l
+
+@card vim | Reach the variable
+task: Move the cursor onto the `b` of `int b`.
+hint: Press j once to go down, then l to move right.
+solution: jllll
+goal: 1 4
+start:
+int a = 1;
+int b = 2;
+int c = 3;
+@end
+
+@card vim | Climb back up
+task: Move up to the `c` of `class`.
+hint: k moves up (three times). h moves left.
+solution: kkkhh
+cursor: 3 9
+goal: 0 7
+start:
+public class Point {
+    int x;
+    int y;
+    int z = 0;
+}
+@end
+
+@card vim | Delete a typo with x
+task: Remove the extra `m` so it reads `System`.
+hint: Move with l, then x deletes the character under the cursor.
+explain: x is "cut one character". It is the smallest deletion in Vim.
+solution: lllllx
+start:
+Systemm.out.println("Hi");
+@end
+target:
+System.out.println("Hi");
+@end
+
+@lesson V1.2 | Counts
+intro: Almost every command accepts a **count** in front: `4j` moves down 4 lines, `3x` deletes 3 characters.
+intro: Counting is faster than tapping. The editor shows relative line numbers so you can read the count off the gutter.
+keys: [count]j  [count]l  [count]x
+
+@card vim | Jump with a count
+task: Put the cursor on the `t` of `target`.
+hint: Read the relative number in the gutter: 4j, then 8l.
+solution: 4j8l
+goal: 4 8
+start:
+public class Main {
+    // one
+    // two
+    // three
+    int target = 42;
+}
+@end
+
+@card vim | Delete several characters
+task: Remove the `xxx` garbage.
+hint: The cursor is already on the first x. Use a count with x.
+solution: 3x
+cursor: 0 4
+start:
+int xxxvalue = 7;
+@end
+target:
+int value = 7;
+@end
+
+@lesson V1.3 | Insert mode and Escape
+intro: `i` enters **INSERT** mode before the cursor. Type your text, then press `Esc` to return to NORMAL mode.
+intro: Build the reflex: type, then Esc immediately. `Ctrl-[` also works as Escape and keeps your hands on the keyboard.
+keys: i  Esc
+
+@card vim | Insert a missing keyword
+task: Make the method `static`.
+hint: The cursor is on `void`. Press i, type "static " (with the space), then Esc.
+solution: istatic <Esc>
+cursor: 0 7
+start:
+public void run() {}
+@end
+target:
+public static void run() {}
+@end
+
+@card vim | Finish the type name
+task: Fix `Strin` so it reads `String`.
+hint: The cursor is just after Strin. i inserts before the cursor.
+solution: ig<Esc>
+cursor: 0 5
+start:
+Strin name = "Ada";
+@end
+target:
+String name = "Ada";
+@end
+
+@unit V2 | More ways into insert mode
+desc: Choose the insert command that puts the cursor exactly where the text must go: a, A, I, o, O.
+
+@lesson V2.1 | Append with a and A
+intro: `a` inserts **after** the cursor. `A` appends at the **end of the line**, wherever the cursor is.
+intro: `A;` + `Esc` is the classic "add a missing semicolon" move in Java.
+keys: a  A
+
+@card vim | Add the missing semicolon
+task: Add `;` at the end of the line.
+hint: A jumps to the end of the line and enters insert mode.
+solution: A;<Esc>
+start:
+int x = 10
+@end
+target:
+int x = 10;
+@end
+
+@card vim | Append after the cursor
+task: Fix `printn` so it reads `println`.
+hint: The cursor is on the t. a inserts right after it.
+solution: al<Esc>
+cursor: 0 15
+start:
+System.out.printn(x);
+@end
+target:
+System.out.println(x);
+@end
+
+@card vim | Three semicolons
+task: Every line is missing its semicolon.
+hint: A;<Esc> then j to go down. (Soon you will learn the dot command to make this shorter.)
+solution: A;<Esc>jA;<Esc>jA;<Esc>
+start:
+int a = 1
+int b = 2
+int c = 3
+@end
+target:
+int a = 1;
+int b = 2;
+int c = 3;
+@end
+
+@lesson V2.2 | I, o and O
+intro: `I` inserts at the first non-blank character of the line (indentation is skipped).
+intro: `o` opens a new line **below** and enters insert mode; `O` opens one **above**. The new line keeps the indentation.
+keys: I  o  O
+
+@card vim | Comment out a line
+task: Turn the return statement into a comment with `// `.
+hint: I jumps to the first non-blank character.
+solution: I// <Esc>
+cursor: 0 12
+start:
+    return total;
+@end
+target:
+    // return total;
+@end
+
+@card vim | Open a line below
+task: Add `int b = 2;` between the two lines.
+hint: o opens a line below the cursor.
+solution: oint b = 2;<Esc>
+start:
+int a = 1;
+int c = 3;
+@end
+target:
+int a = 1;
+int b = 2;
+int c = 3;
+@end
+
+@card vim | Open a line above
+task: Add the comment `// width times height` above the return.
+hint: O opens a line above, with the same indentation.
+solution: O// width times height<Esc>
+cursor: 1 6
+start:
+public int area() {
+    return w * h;
+}
+@end
+target:
+public int area() {
+    // width times height
+    return w * h;
+}
+@end
+
+@unit V3 | Word motions
+desc: Move by words instead of characters: w b e for words, W B E for WORDS, 0 ^ $ for line positions.
+
+@lesson V3.1 | w, b and e
+intro: `w` jumps to the start of the next word, `b` back to the start of the previous word, `e` to the end of the word.
+intro: A **word** is letters/digits/underscore, OR a run of punctuation. So `a.b` is three words.
+intro: Combine with counts: `3w`.
+keys: w  b  e
+
+@card vim | Hop to the last operand
+task: Put the cursor on `b`.
+hint: Count the words: sum, =, a, +, b. Use a count with w.
+solution: 5w
+goal: 0 14
+start:
+int sum = a + b;
+@end
+
+@card vim | Back with b
+task: Put the cursor on the start of `first`.
+hint: b goes back one word at a time. Punctuation counts as a word.
+solution: 3b
+cursor: 0 21
+goal: 0 7
+start:
+return first + second;
+@end
+
+@card vim | End of a word
+task: Put the cursor on the last letter of `average`.
+hint: e goes to the end of the current or next word.
+solution: 2e
+goal: 0 13
+start:
+double average = total / count;
+@end
+
+@lesson V3.2 | WORDs: W, B and E
+intro: A **WORD** is any run of non-blank characters. `System.out.println(msg);` is one WORD.
+intro: `W`, `B`, `E` are the WORD versions of w, b, e. They are perfect for punctuation-heavy Java.
+keys: W  B  E
+
+@card vim | Skip over the punctuation
+task: Jump to the comment `//`.
+hint: One W skips the whole statement.
+solution: W
+goal: 0 25
+start:
+System.out.println(msg); // log it
+@end
+
+@card vim | Two WORDs ahead
+task: Jump to `suffix`.
+hint: 2W
+solution: 2W
+goal: 0 22
+start:
+map.get(key).trim() + suffix;
+@end
+
+@card vim | End of the WORD
+task: Put the cursor on the `;` at the end of the first statement.
+hint: E goes to the end of a WORD.
+solution: E
+goal: 0 21
+start:
+list.add(item.copy()); count++;
+@end
+
+@lesson V3.3 | Line positions: 0, ^ and $
+intro: `0` goes to column 0, `^` to the first non-blank character, `$` to the end of the line.
+intro: In indented code, `^` is usually what you want.
+keys: 0  ^  $
+
+@card vim | First non-blank
+task: Put the cursor on the `r` of `return`.
+hint: ^
+solution: ^
+cursor: 0 15
+goal: 0 8
+start:
+        return result;
+@end
+
+@card vim | End of the line
+task: Put the cursor on the last character.
+hint: $
+solution: $
+goal: 0 23
+start:
+int[] data = new int[8];
+@end
+
+@card vim | Column zero
+task: Insert `//` at the very first column (before the indentation).
+hint: 0 then i.
+solution: 0i//<Esc>
+cursor: 0 9
+start:
+    debug(x);
+@end
+target:
+//    debug(x);
+@end
+
+@unit V4 | The grammar: delete + motion
+desc: Vim commands are sentences: operator + motion. d (delete) works with every motion you know.
+
+@lesson V4.1 | d + motion
+intro: **Operator + motion** is the core of Vim. `d` is the delete operator: `dw` deletes a word, `de` to the end of the word, `db` backwards, `d$` to end of line, `d0` to start.
+intro: `D` is a shortcut for `d$`.
+intro: Learn the operators and motions separately; they multiply: 3 operators x 10 motions = 30 commands.
+keys: dw  de  db  d$  D  d0
+
+@card vim | Delete a duplicated word
+task: Remove the duplicated `final `.
+hint: dw deletes from the cursor to the start of the next word.
+solution: dw
+start:
+final final int x = 1;
+@end
+target:
+final int x = 1;
+@end
+
+@card vim | Delete to the end of the line
+task: Delete the trailing comment (including the space before it).
+hint: The cursor is on the space. D = d$.
+solution: D
+cursor: 0 10
+start:
+int x = 1; // TODO remove this
+@end
+target:
+int x = 1;
+@end
+
+@card vim | Delete backwards
+task: Remove the duplicated `value`.
+hint: The cursor is on the second value. db deletes back to the start of the previous word.
+solution: db
+cursor: 0 13
+start:
+return value value;
+@end
+target:
+return value;
+@end
+
+@card vim | Delete several words
+task: Remove `very very very `.
+hint: A count works with operators: d3w.
+solution: d3w
+cursor: 0 3
+start:
+// very very very important
+@end
+target:
+// important
+@end
+
+@lesson V4.2 | Whole lines: dd
+intro: Doubling an operator acts on the whole line: `dd` deletes the line, `3dd` deletes three lines.
+intro: Linewise motions also work: `dj` deletes this line and the next, `dG` to the end of the file, `dgg` to the top.
+keys: dd  [count]dd  dj  dk  dG  dgg
+
+@card vim | Remove the debug line
+task: Delete the println line.
+hint: dd
+solution: dd
+cursor: 1 0
+start:
+int a = 1;
+System.out.println("debug");
+int b = 2;
+@end
+target:
+int a = 1;
+int b = 2;
+@end
+
+@card vim | Remove a block of debug lines
+task: Delete the three debug lines.
+hint: 3dd
+solution: 3dd
+cursor: 1 4
+start:
+void run() {
+    log("a");
+    log("b");
+    log("c");
+    work();
+}
+@end
+target:
+void run() {
+    work();
+}
+@end
+
+@card vim | Cut to the end of the file
+task: Delete everything from the `// dead code` line to the end.
+hint: dG deletes to the last line.
+solution: dG
+cursor: 2 0
+start:
+int a = 1;
+int b = 2;
+// dead code
+int c = 3;
+int d = 4;
+@end
+target:
+int a = 1;
+int b = 2;
+@end
+
+@unit V5 | Change and replace
+desc: c deletes and enters insert mode in one step. r and R overwrite characters, ~ flips case.
+
+@lesson V5.1 | The change operator c
+intro: `c` = delete + insert. `cw` changes to the end of the word, `c$` (or `C`) to the end of the line, `cc` (or `S`) the whole line keeping its indent.
+intro: `s` substitutes one character (`cl`).
+keys: cw  C  cc  S  s
+
+@card vim | Rename a variable
+task: Rename `cnt` to `count`.
+hint: cw on the c, type count, Esc.
+solution: cwcount<Esc>
+cursor: 0 4
+start:
+int cnt = 0;
+@end
+target:
+int count = 0;
+@end
+
+@card vim | Rewrite the rest of the line
+task: Replace `oldValue();` with `newValue();`.
+hint: C changes to the end of the line.
+solution: CnewValue();<Esc>
+cursor: 0 11
+start:
+String s = oldValue();
+@end
+target:
+String s = newValue();
+@end
+
+@card vim | Rewrite a whole line
+task: Replace the statement with `x++;` keeping the indentation.
+hint: cc keeps the indentation.
+solution: ccx++;<Esc>
+cursor: 0 6
+start:
+    x = x + 1;
+@end
+target:
+    x++;
+@end
+
+@lesson V5.2 | r, R and ~
+intro: `r` + a character replaces the character under the cursor without entering insert mode.
+intro: `R` enters REPLACE mode: you type over existing text. `~` toggles the case of the character and moves right.
+keys: r  R  ~
+
+@card vim | Fix the operator
+task: Change the minus into a plus.
+hint: r+
+solution: r+
+cursor: 0 9
+start:
+return a - b;
+@end
+target:
+return a + b;
+@end
+
+@card vim | Capitalize a type
+task: Java types start with a capital letter: fix `string`.
+hint: ~ toggles case.
+solution: ~
+start:
+string name;
+@end
+target:
+String name;
+@end
+
+@card vim | Overwrite the values
+task: Change the zeros into 1, 2, 3.
+hint: R then type over: 1, 2, 3.
+solution: R1, 2, 3<Esc>
+cursor: 0 11
+start:
+int[] a = {0, 0, 0};
+@end
+target:
+int[] a = {1, 2, 3};
+@end
+
+@unit V6 | Yank and put
+desc: y copies (yanks), p puts after the cursor, P puts before. Deleted text can be put too: d is cut.
+
+@lesson V6.1 | yy, p and P
+intro: `yy` yanks the line. `p` puts after the cursor (below for lines), `P` puts before (above).
+intro: Every delete also stores the text, so `ddp` swaps two lines and `xp` swaps two characters.
+keys: yy  p  P  ddp  xp
+
+@card vim | Duplicate a line
+task: Duplicate the line.
+hint: yyp
+solution: yyp
+start:
+int x = 0;
+@end
+target:
+int x = 0;
+int x = 0;
+@end
+
+@card vim | Swap two lines
+task: The declaration must come before the use. Swap the lines.
+hint: ddp
+solution: ddp
+start:
+System.out.println(total);
+int total = 5;
+@end
+target:
+int total = 5;
+System.out.println(total);
+@end
+
+@card vim | Swap two characters
+task: Fix the typo `retrun`.
+hint: Put the cursor on the first wrong letter and xp.
+solution: xp
+cursor: 0 3
+start:
+retrun x;
+@end
+target:
+return x;
+@end
+
+@lesson V6.2 | Yank with motions
+intro: `y` is an operator like d: `yw` yanks a word, `y$` to end of line, `yiw` the word under the cursor.
+intro: `P` is handy for putting a word *before* the cursor.
+keys: yw  y$  P
+
+@card vim | Copy a word
+task: Fill in the second assignment with `value`.
+hint: yw on value, $ to the ;, P to put before it.
+solution: yw$P
+cursor: 0 8
+start:
+int a = value; int b = ;
+@end
+target:
+int a = value; int b = value;
+@end
+
+@card vim | Copy a line above
+task: Copy the import line and put it above the class.
+hint: yy then P on the class line.
+solution: yyjP
+start:
+import java.util.List;
+class A {}
+@end
+target:
+import java.util.List;
+import java.util.List;
+class A {}
+@end
+
+@unit V7 | Undo, redo and the dot command
+desc: u undoes, Ctrl-r redoes. The dot command . repeats your last change: the most powerful key in Vim.
+
+@lesson V7.1 | u and Ctrl-r
+intro: `u` undoes the last change (an entire insert session counts as one change). `Ctrl-r` redoes.
+intro: Do not fear mistakes: fix them with u.
+keys: u  Ctrl-r
+
+@card vim | Undo a mistake
+task: Delete the middle line. Practice: first delete the first line by "mistake" (dd), undo it (u), then delete the right one.
+hint: The final text is all that is checked, but practice the undo!
+solution: jdd
+start:
+keep me
+delete me
+keep me too
+@end
+target:
+keep me
+keep me too
+@end
+
+@lesson V7.2 | The dot formula
+intro: `.` repeats the last change. The **Dot Formula**: one keystroke to move, one keystroke to execute.
+intro: Make your change repeatable (e.g. `A;<Esc>` instead of moving to the end and typing), then use `j.` `j.`
+intro: Insert sessions, `dw`, `cw...<Esc>`, `>>`, `x` ... everything that changes text can be dot-repeated.
+keys: .
+
+@card vim | Semicolons with dot
+task: Add the missing semicolons, using the dot command.
+hint: A;<Esc> once, then j. j.
+solution: A;<Esc>j.j.j.
+start:
+int a = 1
+int b = 2
+int c = 3
+int d = 4
+@end
+target:
+int a = 1;
+int b = 2;
+int c = 3;
+int d = 4;
+@end
+
+@card vim | Indent with dot
+task: Indent the three statements one level (4 spaces).
+hint: >> indents a line. Then j. j.
+solution: j>>j.j.
+start:
+void f() {
+a();
+b();
+c();
+}
+@end
+target:
+void f() {
+    a();
+    b();
+    c();
+}
+@end
+
+@card vim | Repeat a change
+task: Replace each `var` with `int`.
+hint: cw int <Esc> on the first, then move with w/j and press . on the others.
+solution: cwint<Esc>j0.j0.
+start:
+var a = 1;
+var b = 2;
+var c = 3;
+@end
+target:
+int a = 1;
+int b = 2;
+int c = 3;
+@end
+
+@unit V8 | Find in the line: f, t, ; and ,
+desc: Jump straight to a character on the current line. Combine with operators: dt) ct; df,
+
+@lesson V8.1 | f and t
+intro: `f{char}` jumps **onto** the next {char} on the line, `t{char}` jumps **till** just before it. `F` and `T` search backwards.
+intro: `;` repeats the last f/t forward, `,` repeats it backward.
+keys: f  t  F  T  ;  ,
+
+@card vim | Jump to the parenthesis
+task: Put the cursor on the `(`.
+hint: f(
+solution: f(
+goal: 0 18
+start:
+System.out.println("Hello");
+@end
+
+@card vim | Repeat the search
+task: Put the cursor on the third comma.
+hint: f, then ; ;
+solution: f,;;
+goal: 0 23
+start:
+call(alpha, beta, gamma, delta);
+@end
+
+@card vim | Back with F
+task: Put the cursor on the `=`.
+hint: F=
+solution: F=
+cursor: 0 18
+goal: 0 10
+start:
+int total = price * qty;
+@end
+
+@lesson V8.2 | Operators with f and t
+intro: f and t are motions, so they work with operators: `dt)` deletes up to the parenthesis, `ct;` changes up to the semicolon, `df,` deletes through the comma.
+keys: dt  ct  df  dT
+
+@card vim | Clear the arguments
+task: Delete the arguments, keep the parentheses.
+hint: The cursor is after the (. dt)
+solution: dt)
+cursor: 0 4
+start:
+foo(bar, baz);
+@end
+target:
+foo();
+@end
+
+@card vim | Change the expression
+task: Change `price * qty` into `price * quantity` by changing until the semicolon.
+hint: ct; then type the new expression.
+solution: ct;price * quantity<Esc>
+cursor: 0 12
+start:
+int total = price * qty;
+@end
+target:
+int total = price * quantity;
+@end
+
+@card vim | Drop the first argument
+task: Remove `first, ` from the call.
+hint: df, deletes through the comma, then x the space (or use dw after).
+solution: df,x
+cursor: 0 5
+start:
+call(first, second);
+@end
+target:
+call(second);
+@end
+
+@card vim | Commas to semicolons
+task: Replace every comma with a semicolon.
+hint: f, r; then ; to find the next comma and . to repeat the replace.
+solution: f,r;;.;.
+start:
+for (int i = 0, j = 0, k = 0; i < n; i++)
+@end
+target:
+for (int i = 0; j = 0; k = 0; i < n; i++)
+@end
+
+@unit V9 | Text objects
+desc: iw aw i" a" i( a( i{ a{ ip ap: operate on a whole thing no matter where the cursor is inside it.
+
+@lesson V9.1 | Words: iw and aw
+intro: A **text object** selects a structured thing around the cursor. `i` = inner, `a` = a/around (includes surrounding space or delimiters).
+intro: `ciw` changes the whole word under the cursor, even from the middle of it. `daw` deletes a word and one space.
+intro: Text objects are better than motions for the dot command because they do not depend on the cursor position.
+keys: iw  aw  ciw  daw  yiw
+
+@card vim | Change from the middle
+task: Rename `velocity` to `speed`.
+hint: ciw works from anywhere inside the word.
+solution: ciwspeed<Esc>
+cursor: 0 8
+start:
+int velocity = 0;
+@end
+target:
+int speed = 0;
+@end
+
+@card vim | Delete a word and its space
+task: Remove the duplicated `public`.
+hint: daw
+solution: daw
+cursor: 0 9
+start:
+public public void run() {}
+@end
+target:
+public void run() {}
+@end
+
+@lesson V9.2 | Quotes: i" a" i'
+intro: `ci"` changes the inside of a string. If the cursor is before the string on the line, Vim finds the next one.
+intro: `da"` deletes the string with its quotes. `ci'` works on char literals.
+keys: i"  a"  i'
+
+@card vim | Change a string
+task: Change the message to `Hi`.
+hint: ci" works even from the start of the line.
+solution: ci"Hi<Esc>
+start:
+System.out.println("Hello, World!");
+@end
+target:
+System.out.println("Hi");
+@end
+
+@card vim | Change a char literal
+task: Change the char to `'y'`.
+hint: ci'
+solution: ci'y<Esc>
+cursor: 0 5
+start:
+char c = 'x';
+@end
+target:
+char c = 'y';
+@end
+
+@lesson V9.3 | Brackets: i( i{ i[ i<
+intro: `ci(` (or `cib`) changes everything inside parentheses. `di{` (or `diB`) empties a block. `a(` includes the brackets.
+intro: When the braces are on their own lines, `di{` deletes the inner lines and keeps the braces.
+intro: Works with `[]` and `<>` too: `ci<` changes generic type arguments.
+keys: i(  a(  i{  a{  i[  i<
+
+@card vim | Change the condition
+task: Change the condition to `ready`.
+hint: ci( from anywhere inside the parentheses.
+solution: ci(ready<Esc>
+cursor: 0 8
+start:
+if (x > 0 && y > 0) {
+@end
+target:
+if (ready) {
+@end
+
+@card vim | Empty a method body
+task: Delete the whole method body, keep the braces.
+hint: di{ from anywhere inside the block.
+solution: di{
+cursor: 2 6
+start:
+void reset() {
+    a = 0;
+    b = 0;
+    c = 0;
+}
+@end
+target:
+void reset() {
+}
+@end
+
+@card vim | Change the generic type
+task: Change `<String, Integer>` to `<String, Long>`.
+hint: ci< and type the new arguments.
+solution: ci<String, Long<Esc>
+cursor: 0 5
+start:
+Map<String, Integer> counts = new HashMap<>();
+@end
+target:
+Map<String, Long> counts = new HashMap<>();
+@end
+
+@card vim | Change an index
+task: Change the index to `i + 1`.
+hint: ci[
+solution: ci[i + 1<Esc>
+cursor: 0 13
+start:
+int v = arr[index];
+@end
+target:
+int v = arr[i + 1];
+@end
+
+@lesson V9.4 | Paragraphs: ip and ap
+intro: A paragraph is a block of lines separated by blank lines. `dap` deletes it plus the blank line after; `yap` copies it.
+intro: In code, a method separated by blank lines is a paragraph: `yapP` duplicates it.
+keys: ip  ap
+
+@card vim | Delete a method
+task: Delete the `old()` method and the blank line after it.
+hint: dap
+solution: dap
+cursor: 1 4
+start:
+void old() {
+    legacy();
+}
+
+void current() {
+    work();
+}
+@end
+target:
+void current() {
+    work();
+}
+@end
+
+@unit V10 | Search
+desc: / and ? search with patterns. n and N repeat. * searches for the word under the cursor. Searches are motions too: d/foo
+
+@lesson V10.1 | / ? n N
+intro: `/pattern` Enter searches forward, `?pattern` backward. `n` goes to the next match, `N` to the previous one.
+intro: Searches wrap around the end of the file. Matches are highlighted (`:noh` clears the highlight).
+keys: /  ?  n  N
+
+@card vim | Search forward
+task: Jump to the word `return`.
+hint: /return then Enter.
+solution: /return<CR>
+goal: 3 4
+start:
+int calc(int a) {
+    int b = a * 2;
+    b += 3;
+    return b;
+}
+@end
+
+@card vim | Next match
+task: Jump to the third `log` call.
+hint: /log, Enter, then n n
+solution: /log<CR>nn
+goal: 3 4
+start:
+void run() {
+    log("start");
+    log("middle");
+    log("end");
+}
+@end
+
+@lesson V10.2 | * and the n-dot pattern
+intro: `*` searches forward for the exact word under the cursor, `#` backward.
+intro: A powerful refactor: `*` to find, `ciw` new name `Esc`, then `n.` `n.` to repeat on each occurrence you want.
+keys: *  #  ciw  n  .
+
+@card vim | Rename every occurrence
+task: Rename the variable `tmp` to `sum` in all three places.
+hint: * on tmp, N back to the first, ciwsum<Esc>, then n. n.
+solution: *Nciwsum<Esc>n.n.
+cursor: 0 4
+start:
+int tmp = 0;
+tmp += x;
+return tmp;
+@end
+target:
+int sum = 0;
+sum += x;
+return sum;
+@end
+
+@lesson V10.3 | Search as a motion
+intro: `/` is a motion: `d/pattern` Enter deletes up to the match, `c/pattern` changes up to it.
+intro: Patterns are regular expressions: `\d` digit, `\w` word char, `\<` `\>` word boundaries, `.*` anything.
+keys: d/  c/  \d  \<word\>
+
+@card vim | Delete up to a word
+task: Delete everything before `result`.
+hint: d/result Enter
+solution: d/result<CR>
+start:
+// TODO: remove this preamble result = compute();
+@end
+target:
+result = compute();
+@end
+
+@unit V11 | Visual mode
+desc: v selects characters, V selects lines. Select first, then apply an operator. Text objects work in visual mode.
+
+@lesson V11.1 | v and V
+intro: `v` starts a characterwise selection, `V` a linewise one. Move to extend it, then press an operator: `d` `y` `c` `>` `<` `~` `U` `u` `J`.
+intro: `o` jumps to the other end of the selection. `gv` reselects the last selection.
+intro: Tip: experts prefer operators + motions (repeatable with .), but visual mode is great when you need to see what you select.
+keys: v  V  o  gv
+
+@card vim | Delete a selection
+task: Delete the parameter `int unused, ` from the list.
+hint: v, then 2f<space> extends to the second space (after the comma), then d.
+solution: v2f d
+cursor: 0 7
+start:
+void f(int unused, int used) {}
+@end
+target:
+void f(int used) {}
+@end
+
+@card vim | Indent a block
+task: Indent the three lines inside the method.
+hint: V, jj to extend, then >
+solution: jVjj>
+start:
+void f() {
+a();
+b();
+c();
+}
+@end
+target:
+void f() {
+    a();
+    b();
+    c();
+}
+@end
+
+@card vim | Uppercase a constant
+task: Make `max_size` uppercase.
+hint: viw selects the word, U uppercases it.
+solution: viwU
+cursor: 0 22
+start:
+static final int max_size = 10;
+@end
+target:
+static final int MAX_SIZE = 10;
+@end
+
+@card vim | Join lines
+task: Join the broken expression into one line.
+hint: V, select down, then J joins.
+solution: VjjJ
+start:
+int total = a
+    + b
+    + c;
+@end
+target:
+int total = a + b + c;
+@end
+
+@unit V12 | Jumping around
+desc: gg G and :N jump to lines, % to the matching bracket, { } by paragraph, m and ' with marks.
+
+@lesson V12.1 | gg, G, :N and %
+intro: `gg` goes to the first line, `G` to the last, `42G` or `:42` Enter to line 42.
+intro: `%` jumps between matching `()` `[]` `{}`: perfect for checking which brace closes which block. `d%` deletes through the matching bracket.
+keys: gg  G  [N]G  :N  %
+
+@card vim | Matching brace
+task: Jump to the brace that closes the `if` block.
+hint: Cursor is on the {. Press %.
+solution: %
+cursor: 1 15
+goal: 4 4
+start:
+void check(int x) {
+    if (x > 10) {
+        warn();
+        x = 10;
+    }
+    use(x);
+}
+@end
+
+@card vim | Last line, first line
+task: Delete the last line, then put the cursor back on the first line.
+hint: G dd gg
+solution: Gddgg
+cursor: 1 0
+goal: 0 0
+start:
+int a = 1;
+int b = 2;
+int c = 3;
+@end
+target:
+int a = 1;
+int b = 2;
+@end
+
+@card vim | Go to a line number
+task: Delete line 4.
+hint: 4G then dd. (or :4 Enter)
+solution: 4Gdd
+start:
+line one
+line two
+line three
+line four
+line five
+@end
+target:
+line one
+line two
+line three
+line five
+@end
+
+@lesson V12.2 | Paragraph jumps and marks
+intro: `}` jumps to the next blank line, `{` to the previous one: a fast way to hop between methods.
+intro: `ma` sets mark a, `'a` jumps to its line, `` `a `` to its exact position. `d'a` deletes from here to the mark, linewise.
+keys: {  }  ma  'a  `a  d'a
+
+@card vim | Hop between methods
+task: Jump to the blank line before `third()`.
+hint: } twice.
+solution: }}
+goal: 5 0
+start:
+void first() {
+}
+
+void second() {
+}
+
+void third() {
+}
+@end
+
+@card vim | Delete to a mark
+task: Delete from the `// begin` line to the `// end` line (inclusive).
+hint: ma on the begin line, move to the end line, d'a.
+solution: majjjd'a
+cursor: 1 0
+start:
+keep();
+// begin
+temp1();
+temp2();
+// end
+keep();
+@end
+target:
+keep();
+keep();
+@end
+
+@unit V13 | Registers
+desc: Vim has many clipboards called registers: "a to "z, "0 for the last yank, "_ the black hole, and Ctrl-r in insert mode.
+
+@lesson V13.1 | Named registers
+intro: Prefix a command with `"x` to use register x: `"ayy` yanks into a, `"ap` puts from a. Uppercase `"Ayy` **appends** to a.
+intro: `"0` always holds the last **yank**, even after you delete things. `"_` is the black hole: `"_dd` deletes without overwriting your clipboard.
+keys: "ayy  "ap  "Ayy  "0p  "_d
+
+@card vim | Keep the yank safe
+task: Replace the `TODO` line with a copy of the first line.
+hint: yy on line 1, then on TODO: "_dd to delete without losing the yank, then P.
+solution: yyj"_ddP
+start:
+int x = compute();
+// TODO
+@end
+target:
+int x = compute();
+int x = compute();
+@end
+
+@card vim | Paste from register 0
+task: Copy the first line, delete the junk line, then put the copy at the end.
+hint: yy, then jdd (this overwrites the unnamed register), then "0p
+solution: yyjdd"0p
+start:
+log.info("ready");
+junk
+@end
+target:
+log.info("ready");
+log.info("ready");
+@end
+
+@card vim | Collect lines into a register
+task: Put copies of line 1 and line 3 at the end of the file, in that order.
+hint: "ayy on line 1, "Ayy on line 3 (append), then G"ap
+solution: "ayyjj"AyyG"ap
+start:
+import a.A;
+// separator
+import b.B;
+@end
+target:
+import a.A;
+// separator
+import b.B;
+import a.A;
+import b.B;
+@end
+
+@lesson V13.2 | Ctrl-r in insert mode
+intro: In insert mode, `Ctrl-r` followed by a register name inserts its contents: `Ctrl-r "` puts the last yank or delete without leaving insert mode.
+intro: Remember that `c` and `d` also fill the `"` register. `Ctrl-r 0` always gives you the last **yank**.
+keys: Ctrl-r"  Ctrl-r0  Ctrl-ra
+
+@card vim | Reuse a word while typing
+task: Make the second line `print(name);` using the word yanked from line 1.
+hint: yiw on name, j, cc (careful: cc overwrites the " register with the deleted line!), so insert register 0: print(<C-r>0);
+solution: yiwjccprint(<C-r>0);<Esc>
+cursor: 0 7
+start:
+String name = "Ada";
+x
+@end
+target:
+String name = "Ada";
+print(name);
+@end
+
+@unit V14 | Macros
+desc: Record keystrokes with q, replay with @. Turn a one-line edit into a hundred-line edit.
+
+@lesson V14.1 | Record and replay
+intro: `qa` starts recording into register a, `q` stops. `@a` replays it, `@@` replays the last macro, `5@a` replays 5 times.
+intro: Golden rule: make the macro **position-independent**: start with `0` or `^`, use motions like `w` `f` `t`, and end by moving to the next line.
+intro: A macro stops on the first error, so a big count like `99@a` safely runs to the end of the file.
+keys: qa  q  @a  @@  [count]@a
+
+@card vim | Wrap values in quotes
+task: Turn each word into a quoted string followed by a comma.
+hint: qa I"<Esc>A",<Esc>j q, then 2@a
+solution: qaI"<Esc>A",<Esc>jq2@a
+start:
+red
+green
+blue
+@end
+target:
+"red",
+"green",
+"blue",
+@end
+
+@card vim | Fields to assignments
+task: Convert each field declaration into a constructor assignment like `this.name = name;`.
+hint: Record on line 1: 0 dw (removes the type), yiw, I this.<Esc>, f; i = <C-r>"<Esc>, j. Then replay.
+solution: qa0dwyiwIthis.<Esc>f;i = <C-r>"<Esc>jq@a@a
+start:
+String name;
+int age;
+double score;
+@end
+target:
+this.name = name;
+this.age = age;
+this.score = score;
+@end
+
+@lesson V14.2 | Macros with counters
+intro: `Ctrl-a` increments the number under or after the cursor, `Ctrl-x` decrements it. `5 Ctrl-a` adds 5.
+intro: Combined with a macro you can generate numbered sequences: yank a line, put it, increment, repeat.
+keys: Ctrl-a  Ctrl-x  [count]Ctrl-a
+
+@card vim | Fix the off-by-one
+task: Change the loop bound from 9 to 10.
+hint: Ctrl-a finds the next number on the line and increments it... but the first number is 0! Move to the 9 first (f9) or use $.
+solution: f9<C-a>
+start:
+for (int i = 0; i < 9; i++) {
+@end
+target:
+for (int i = 0; i < 10; i++) {
+@end
+
+@card vim | Generate a sequence
+task: Create cases 1 to 4 by copying the line and incrementing.
+hint: qa yyp <C-a> q then 2@a
+solution: qayyp<C-a>q2@a
+start:
+case 1:
+@end
+target:
+case 1:
+case 2:
+case 3:
+case 4:
+@end
+
+@unit V15 | Ex commands: the power tools
+desc: Command-line mode: substitute with :s, run commands on matching lines with :g, replay normal mode with :norm, sort, move and copy lines.
+
+@lesson V15.1 | Substitute
+intro: `:s/old/new/` replaces the first match on the current line. Add `g` to replace all on the line. `:%s/old/new/g` does the whole file.
+intro: Ranges: `:3,7s/...` lines 3 to 7, `:'<,'>s/...` the visual selection (press `:` in visual mode).
+intro: Use `\<word\>` to match whole words only, `&` in the replacement to reuse the match, `\(...\)` with `\1` for groups.
+keys: :s  :%s  g flag  \< \>  &  \1
+
+@card vim | Replace everywhere
+task: Rename `foo` to `bar` in the whole file.
+hint: :%s/foo/bar/g
+solution: :%s/foo/bar/g<CR>
+start:
+int foo = 1;
+foo = foo + 1;
+print(foo);
+@end
+target:
+int bar = 1;
+bar = bar + 1;
+print(bar);
+@end
+
+@card vim | Whole words only
+task: Rename the variable `i` to `idx` without touching other words that contain the letter i.
+hint: :%s/\<i\>/idx/g
+solution: :%s/\<i\>/idx/g<CR>
+start:
+for (int i = 0; i < limit; i++) {
+    print(items[i]);
+}
+@end
+target:
+for (int idx = 0; idx < limit; idx++) {
+    print(items[idx]);
+}
+@end
+
+@card vim | Swap with groups
+task: Swap the assignment sides on each line: `a = b;` becomes `b = a;`.
+hint: :%s/\(\w\+\) = \(\w\+\)/\2 = \1/
+solution: :%s/\(\w\+\) = \(\w\+\)/\2 = \1/<CR>
+start:
+x = y;
+first = second;
+@end
+target:
+y = x;
+second = first;
+@end
+
+@lesson V15.2 | :g, :v and :norm
+intro: `:g/pattern/cmd` runs an Ex command on every line matching the pattern: `:g/System.out/d` deletes all print lines. `:v` (or `:g!`) does the opposite.
+intro: `:norm keys` runs normal-mode keys on every line of a range: `:%norm A;` appends a semicolon to every line. `:g/x/norm ...` combines them.
+keys: :g  :v  :norm  :%norm
+
+@card vim | Delete all debug prints
+task: Delete every line containing `System.out`.
+hint: :g/System.out/d
+solution: :g/System.out/d<CR>
+start:
+int a = load();
+System.out.println(a);
+int b = a * 2;
+System.out.println(b);
+save(b);
+@end
+target:
+int a = load();
+int b = a * 2;
+save(b);
+@end
+
+@card vim | Semicolons on every line
+task: Add a semicolon to the end of every line.
+hint: :%norm A;
+solution: :%norm A;<CR>
+start:
+int a = 1
+int b = 2
+int c = 3
+int d = 4
+int e = 5
+@end
+target:
+int a = 1;
+int b = 2;
+int c = 3;
+int d = 4;
+int e = 5;
+@end
+
+@card vim | Keep only the methods
+task: Delete every line that does NOT contain `public`.
+hint: :v/public/d
+solution: :v/public/d<CR>
+start:
+public void a() {}
+// helper
+private int b;
+public void c() {}
+@end
+target:
+public void a() {}
+public void c() {}
+@end
+
+@lesson V15.3 | :sort, :m and :t
+intro: `:sort` sorts lines (in a range, or the whole file). `:sort u` also removes duplicates.
+intro: `:m0` moves the current line to the top, `:m+1` down one line, `:t.` copies it below. Ranges work: `:2,4m$`.
+keys: :sort  :sort u  :m  :t
+
+@card vim | Sort the imports
+task: Sort the import lines and remove the duplicate.
+hint: :sort u
+solution: :sort u<CR>
+start:
+import java.util.Map;
+import java.io.File;
+import java.util.List;
+import java.io.File;
+@end
+target:
+import java.io.File;
+import java.util.List;
+import java.util.Map;
+@end
+
+@card vim | Move a line to the top
+task: Move the package declaration to the top of the file.
+hint: :m0
+solution: :m0<CR>
+cursor: 2 0
+start:
+import java.util.List;
+
+package app;
+@end
+target:
+package app;
+import java.util.List;
+
+@end
+
+@unit V16 | Case, joins and fine control
+desc: Case operators g~ gU gu, joining lines with J and gJ, and operator combinations.
+
+@lesson V16.1 | Case operators
+intro: `gU` + motion uppercases, `gu` lowercases, `g~` toggles. `gUiw` uppercases a word, `guu` lowercases a line, `gUU` uppercases it.
+keys: gU  gu  g~  gUiw  gUU  guu
+
+@card vim | Constant name
+task: Make the constant name uppercase.
+hint: gUiw from inside the word.
+solution: gUiw
+cursor: 0 26
+start:
+public static final int timeout_ms = 500;
+@end
+target:
+public static final int TIMEOUT_MS = 500;
+@end
+
+@card vim | Lowercase a line
+task: Lowercase the whole SQL keyword line.
+hint: guu
+solution: guu
+start:
+SELECT NAME FROM USERS
+@end
+target:
+select name from users
+@end
+
+@lesson V16.2 | Joining lines
+intro: `J` joins the next line onto this one, adding one space and removing indentation. `gJ` joins without adding or removing spaces. `3J` joins three lines.
+keys: J  gJ  [count]J
+
+@card vim | Join a builder chain
+task: Join the chained call into one line.
+hint: 3J
+solution: 3J
+start:
+String s = new StringBuilder()
+    .append(a)
+    .toString();
+@end
+target:
+String s = new StringBuilder() .append(a) .toString();
+@end
+
+@card vim | Join without spaces
+task: Join the split string literal parts without adding spaces.
+hint: gJ
+solution: gJ
+start:
+String url = "https://example.com/api/
+v1/users";
+@end
+target:
+String url = "https://example.com/api/v1/users";
+@end
+
+@unit V17 | Mastery: real Java refactors
+desc: Vim-golf style challenges. Combine everything: text objects, dot, macros, :s, :g, :norm. Try to beat par!
+
+@lesson V17.1 | Refactoring challenges
+intro: Think before you type: what is the smallest repeatable change? Can a text object, `.`, a macro or an Ex command do it for you?
+intro: Par is the reference solution's keystroke count. 3 stars = at or under par.
+keys: everything
+
+@card vim | List to array initializer
+task: Turn the list of names into `String[] names = {"ann", "bob", "cid"};` on one line.
+hint: :%s/.*/"&",/ then 3J, then fix the ends. Or a macro.
+solution: :%s/.*/"&",/<CR>gg3J$xIString[] names = {<Esc>A};<Esc>
+start:
+ann
+bob
+cid
+@end
+target:
+String[] names = {"ann", "bob", "cid"};
+@end
+
+@card vim | Wrap a call in try/catch
+task: Wrap the statement in a try block that catches IOException and prints the message.
+hint: O to type `try {` above, j and >> to indent the statement, then o. In insert mode Ctrl-d removes one indent level and Tab adds one.
+solution: Otry {<Esc>j>>o<C-d>} catch (IOException e) {<CR><Tab>System.err.println(e.getMessage());<CR><C-d>}<Esc>
+start:
+Files.readString(path);
+@end
+target:
+try {
+    Files.readString(path);
+} catch (IOException e) {
+    System.err.println(e.getMessage());
+}
+@end
+
+@card vim | Getters from fields
+task: Turn each field into a one-line getter like `public String getName() { return name; }`.
+hint: :%s with two groups; \u in the replacement uppercases the next character: get\u\2
+solution: :%s/\(\w\+\) \(\w\+\);/public \1 get\u\2() { return \2; }/<CR>
+start:
+String name;
+int age;
+@end
+target:
+public String getName() { return name; }
+public int getAge() { return age; }
+@end
+
+@card vim | Remove all comments
+task: Delete every line that is only a `//` comment.
+hint: :g/^\s*\/\//d
+solution: :g/^\s*\/\//d<CR>
+start:
+class A {
+    // the counter
+    int count;
+    // increments it
+    void inc() { count++; }
+}
+@end
+target:
+class A {
+    int count;
+    void inc() { count++; }
+}
+@end
+
+@card vim | Add final to parameters
+task: Make every method parameter `final`.
+hint: :%s/(\(\w\)/(final \1/ and then the ones after commas: :%s/, \(\w\)/, final \1/g
+solution: :%s/(\(\w\)/(final \1/<CR>:%s/, \(\w\)/, final \1/g<CR>
+start:
+void a(int x, int y) {}
+void b(String s) {}
+@end
+target:
+void a(final int x, final int y) {}
+void b(final String s) {}
+@end
+
+@card vim | Convert a for loop to for-each
+task: Rewrite the indexed loop as `for (String item : items) {` and use `item` in the body.
+hint: Change the loop header with cc, then replace `items.get(i)` with :s or ciw.
+solution: ccfor (String item : items) {<Esc>j:s/items.get(i)/item/<CR>
+start:
+for (int i = 0; i < items.size(); i++) {
+    print(items.get(i));
+}
+@end
+target:
+for (String item : items) {
+    print(item);
+}
+@end

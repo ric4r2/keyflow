@@ -1,0 +1,169 @@
+@unit J9 | Collections
+desc: Lists, sets, queues and maps: choosing the right data structure and using it fluently.
+book: Core Java Vol. I, Chapter 9
+
+@lesson J9.1 | The collection interfaces
+book: Chapter 9, section 9.1
+@card read | Interfaces first
+text: Program against interfaces, choose the implementation once:
+code:
+List<String> list = new ArrayList<>();   // ordered, indexed, duplicates allowed
+Set<String> set = new HashSet<>();       // no duplicates
+Queue<String> q = new ArrayDeque<>();    // FIFO
+Map<String, Integer> map = new HashMap<>(); // key -> value
+@end
+text: Then you can switch `ArrayList` to `LinkedList` by changing one line.
+@card read | Iterators
+text: Every collection can be traversed with for-each. To remove while iterating, use an `Iterator` or `removeIf`; modifying the collection inside for-each throws `ConcurrentModificationException`.
+code:
+Iterator<String> it = list.iterator();
+while (it.hasNext()) {
+    if (it.next().isBlank()) it.remove();
+}
+@end
+@card quiz | You need unique elements, order does not matter. Which type?
+option: List
+option*: Set
+option: Map
+option: Queue
+explain: Sets reject duplicates.
+
+@lesson J9.2 | Lists
+book: Chapter 9, section 9.3.1-9.3.2
+@card read | ArrayList vs LinkedList
+text: `ArrayList`: fast random access `get(i)`. Slow inserts in the middle. Use it by default.
+text: `LinkedList`: fast inserts/removals at the ends or via an iterator, slow `get(i)`.
+code:
+List<Integer> nums = new ArrayList<>(List.of(5, 3, 8));
+nums.add(1, 9);          // insert at index 1
+nums.contains(8);        // true
+nums.indexOf(3);         // 2
+Collections.sort(nums);  // or nums.sort(null)
+@end
+@card quiz | You mostly read elements by index. Which list?
+option*: ArrayList
+option: LinkedList
+explain: ArrayList.get(i) is constant time; LinkedList must walk the chain.
+@card read | Immutable lists
+text: `List.of(...)` creates an unmodifiable list: `add` throws `UnsupportedOperationException`. Wrap it to get a modifiable copy: `new ArrayList<>(List.of(...))`.
+
+@lesson J9.3 | Sets
+book: Chapter 9, sections 9.3.3-9.3.4
+@card read | HashSet and TreeSet
+code:
+Set<String> seen = new HashSet<>();
+seen.add("a");
+boolean added = seen.add("a");   // false: already there
+Set<String> sorted = new TreeSet<>(List.of("pear", "apple", "fig"));
+// iterates as: apple, fig, pear
+@end
+text: `HashSet` is fastest, no order. `TreeSet` keeps elements sorted. `LinkedHashSet` remembers insertion order.
+@card quiz | Which set iterates in sorted order?
+option: HashSet
+option*: TreeSet
+option: LinkedHashSet
+explain: TreeSet keeps its elements sorted (natural order or a Comparator).
+@card write | Remove duplicates
+task: Create `Set<String> unique` containing the distinct elements of `words`.
+compile: stmt
+check: Set<String>\s+unique\s*=\s*new\s+(Hash|Tree|LinkedHash)Set<>\s*\(\s*words\s*\)
+start:
+List<String> words = List.of("a", "b", "a", "c");
+@end
+answer:
+List<String> words = List.of("a", "b", "a", "c");
+Set<String> unique = new HashSet<>(words);
+@end
+
+@lesson J9.4 | Queues and deques
+book: Chapter 9, sections 9.3.5-9.3.6
+@card read | FIFO, LIFO and priority
+code:
+Deque<String> stack = new ArrayDeque<>();
+stack.push("a"); stack.push("b");
+stack.pop();                         // "b" (last in, first out)
+
+Queue<String> queue = new ArrayDeque<>();
+queue.offer("a"); queue.offer("b");
+queue.poll();                        // "a" (first in, first out)
+
+PriorityQueue<Integer> pq = new PriorityQueue<>(List.of(5, 1, 3));
+pq.poll();                           // 1 (smallest first)
+@end
+@card quiz | Which class is the recommended stack in modern Java?
+option: Stack
+option*: ArrayDeque
+option: LinkedList only
+explain: The legacy Stack class is synchronized and extends Vector. ArrayDeque with push/pop is preferred.
+
+@lesson J9.5 | Maps
+book: Chapter 9, section 9.4
+@card read | Key to value
+code:
+Map<String, Integer> stock = new HashMap<>();
+stock.put("apple", 3);
+stock.get("apple");              // 3
+stock.get("kiwi");               // null
+stock.getOrDefault("kiwi", 0);   // 0
+stock.containsKey("apple");      // true
+for (Map.Entry<String, Integer> e : stock.entrySet()) {
+    System.out.println(e.getKey() + " -> " + e.getValue());
+}
+@end
+@card read | Counting with merge
+code:
+Map<String, Integer> counts = new HashMap<>();
+for (String w : words) {
+    counts.merge(w, 1, Integer::sum);   // add 1, or start at 1
+}
+@end
+text: `TreeMap` keeps keys sorted; `LinkedHashMap` keeps insertion order.
+@card quiz | What does map.get(key) return when the key is missing?
+option: 0
+option: An exception is thrown
+option*: null
+explain: get returns null for a missing key. Use getOrDefault to avoid null checks.
+@card type | Word count
+task: Type the word-count loop.
+compile: stmt
+code:
+List<String> words = List.of("to", "be", "or", "not", "to", "be");
+Map<String, Integer> counts = new TreeMap<>();
+for (String w : words) {
+    counts.merge(w, 1, Integer::sum);
+}
+System.out.println(counts);
+@end
+@card write | Lookup with default
+task: Declare `int qty` holding the stock for "kiwi", or 0 if absent. Use getOrDefault.
+compile: stmt
+check: int\s+qty\s*=\s*stock\.getOrDefault\s*\(\s*"kiwi"\s*,\s*0\s*\)
+start:
+Map<String, Integer> stock = Map.of("apple", 3);
+@end
+answer:
+Map<String, Integer> stock = Map.of("apple", 3);
+int qty = stock.getOrDefault("kiwi", 0);
+@end
+
+@lesson J9.6 | Algorithms and views
+book: Chapter 9, sections 9.5-9.6
+@card read | Collections utilities
+code:
+Collections.sort(list);
+Collections.reverse(list);
+Collections.shuffle(list);
+Collections.max(list);
+int pos = Collections.binarySearch(sortedList, key);   // list must be sorted
+List<String> ro = Collections.unmodifiableList(list);  // read-only view
+@end
+@card quiz | What must be true before calling Collections.binarySearch?
+option: The list is a LinkedList
+option*: The list is sorted
+option: The list has no duplicates
+explain: Binary search halves a sorted range; on an unsorted list the result is meaningless.
+@card read | Choosing a collection
+text: - Ordered by index: `ArrayList`.
+text: - Unique: `HashSet` (sorted: `TreeSet`).
+text: - Lookup by key: `HashMap` (sorted keys: `TreeMap`).
+text: - Stack or queue: `ArrayDeque`. By priority: `PriorityQueue`.

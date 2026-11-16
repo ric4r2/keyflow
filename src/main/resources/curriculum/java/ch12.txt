@@ -1,0 +1,132 @@
+@unit J12 | Concurrency
+desc: Do several things at once: threads, synchronization, thread-safe collections, executors and futures.
+book: Core Java Vol. I, Chapter 12
+
+@lesson J12.1 | Threads
+book: Chapter 12, sections 12.1-12.3
+@card read | Starting a thread
+text: Put the work in a `Runnable` and start a `Thread`. Call `start()`, not `run()`: `run()` would just execute on the current thread.
+code:
+Runnable task = () -> {
+    for (int i = 0; i < 3; i++) System.out.println("working " + i);
+};
+Thread t = new Thread(task);
+t.start();
+t.join();   // wait for it to finish
+@end
+@card quiz | What happens if you call t.run() instead of t.start()?
+option: Same thing
+option*: The task runs on the current thread; no new thread is started
+option: Compile error
+explain: Only start() creates a new thread of execution.
+@card read | States and interruption
+text: A thread is New, Runnable, Blocked, Waiting, Timed waiting or Terminated.
+text: To stop a thread, call `interrupt()`. The thread checks `Thread.currentThread().isInterrupted()`, and blocking calls like `sleep` throw `InterruptedException`.
+@card type | Start and join
+task: Type the thread code.
+compile: stmt
+code:
+Thread worker = new Thread(() -> System.out.println("hello from a thread"));
+worker.start();
+worker.join();
+@end
+
+@lesson J12.2 | Race conditions and locks
+book: Chapter 12, section 12.4
+@card read | Why count++ is not safe
+text: `count++` is three steps: read, add, write. Two threads can interleave and lose updates. This is a **race condition**.
+code:
+private int count;
+public synchronized void increment() {   // one thread at a time
+    count++;
+}
+@end
+text: `synchronized` uses the object's intrinsic lock. `ReentrantLock` is the explicit alternative (always unlock in `finally`).
+@card quiz | Two threads call count++ 1000 times each on a shared int without synchronization. The result is...
+option: Always 2000
+option*: Possibly less than 2000
+option: Always 1000
+explain: Interleaved read-modify-write steps can overwrite each other, losing increments.
+@card read | volatile and atomics
+text: `volatile` guarantees other threads **see** the latest value of a field, but does not make `count++` atomic.
+text: For counters use `AtomicInteger.incrementAndGet()` or `LongAdder`.
+@card fix | Thread-safe counter
+task: Make increment safe for concurrent calls by adding synchronized.
+compile: body
+start:
+static class Counter {
+    private int count;
+
+    public void increment() {
+        count++;
+    }
+}
+@end
+answer:
+static class Counter {
+    private int count;
+
+    public synchronized void increment() {
+        count++;
+    }
+}
+@end
+
+@lesson J12.3 | Thread-safe collections
+book: Chapter 12, section 12.5
+@card read | Use the concurrent versions
+text: Ordinary collections break under concurrent modification. Use:
+text: - `ConcurrentHashMap` (use `merge`/`compute` for atomic updates)
+text: - `CopyOnWriteArrayList` (many reads, few writes)
+text: - `BlockingQueue` (`ArrayBlockingQueue`, `LinkedBlockingQueue`) for producer/consumer: `put` waits when full, `take` waits when empty.
+code:
+ConcurrentHashMap<String, Integer> hits = new ConcurrentHashMap<>();
+hits.merge(page, 1, Integer::sum);   // atomic
+@end
+@card quiz | Which structure fits a producer thread handing work to consumer threads?
+option: ArrayList
+option: HashMap
+option*: BlockingQueue
+explain: take() blocks until an item is available, coordinating producers and consumers without manual locking.
+
+@lesson J12.4 | Executors, Callable and Future
+book: Chapter 12, section 12.6
+@card read | Thread pools
+text: Creating threads by hand is costly. An `ExecutorService` reuses a pool of threads.
+code:
+ExecutorService pool = Executors.newFixedThreadPool(4);
+Future<Integer> f = pool.submit(() -> 6 * 7);   // a Callable returns a value
+int answer = f.get();                           // waits for the result
+pool.shutdown();
+@end
+@card quiz | Difference between Runnable and Callable?
+option: None
+option*: Callable returns a value and may throw checked exceptions
+option: Runnable is only for GUI code
+explain: Runnable.run returns void; Callable.call returns a result.
+@card type | Submit to a pool
+task: Type the executor code.
+compile: stmt
+code:
+ExecutorService pool = java.util.concurrent.Executors.newFixedThreadPool(2);
+java.util.concurrent.Future<Integer> result = pool.submit(() -> 6 * 7);
+System.out.println(result.get());
+pool.shutdown();
+@end
+
+@lesson J12.5 | Asynchronous computations
+book: Chapter 12, section 12.7
+@card read | CompletableFuture
+text: Chain asynchronous steps without blocking:
+code:
+CompletableFuture.supplyAsync(() -> download(url))
+        .thenApply(html -> extractTitle(html))
+        .thenAccept(title -> System.out.println(title))
+        .exceptionally(ex -> { log(ex); return null; });
+@end
+text: Since Java 21, **virtual threads** (`Executors.newVirtualThreadPerTaskExecutor()`) make millions of cheap threads possible, so simple blocking code scales too.
+@card quiz | What does thenApply do?
+option: Blocks until the result is ready
+option*: Transforms the result when it becomes available, returning a new CompletableFuture
+option: Starts a new thread pool
+explain: thenApply registers a function that runs on completion; nothing blocks.

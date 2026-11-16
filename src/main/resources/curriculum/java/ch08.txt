@@ -1,0 +1,150 @@
+@unit J8 | Generic Programming
+desc: Write code that works with any type, safely: generic classes and methods, bounds, erasure and wildcards.
+book: Core Java Vol. I, Chapter 8
+
+@lesson J8.1 | Why generics
+book: Chapter 8, sections 8.1-8.2
+@card read | Type parameters
+text: Without generics a list holds `Object` and you cast everything out (and risk ClassCastException). With generics the compiler knows the element type.
+code:
+List<String> names = new ArrayList<>();   // <> diamond infers String
+names.add("Ada");
+String s = names.get(0);                  // no cast needed
+names.add(42);                            // compile error: good!
+@end
+@card quiz | What does the diamond <> in new ArrayList<>() do?
+option: Creates a raw list
+option*: Infers the type argument from the variable type
+option: Allows any type
+explain: The compiler fills in String from List<String> on the left.
+
+@lesson J8.2 | Generic classes and methods
+book: Chapter 8, sections 8.2-8.3
+@card read | A generic class
+code:
+public class Box<T> {
+    private T value;
+    public Box(T value) { this.value = value; }
+    public T get() { return value; }
+}
+Box<String> b = new Box<>("hi");
+String s = b.get();
+@end
+text: `T` is a **type variable**. Convention: `T` type, `E` element, `K`/`V` key/value.
+@card read | A generic method
+text: Put the type variable before the return type.
+code:
+public static <T> T middle(T[] items) {
+    return items[items.length / 2];
+}
+String m = middle(new String[] {"a", "b", "c"});   // "b"
+@end
+@card type | Pair class
+task: Type the generic Pair class.
+compile: body
+code:
+static class Pair<K, V> {
+    private final K key;
+    private final V value;
+
+    Pair(K key, V value) {
+        this.key = key;
+        this.value = value;
+    }
+
+    K getKey() { return key; }
+    V getValue() { return value; }
+}
+@end
+@card write | Generic method
+task: Write a static generic method `first(List<T> list)` that returns the first element.
+compile: body
+check: static\s+<T>\s+T\s+first\s*\(\s*List<T>
+check: get\(0\)
+start:
+@end
+answer:
+static <T> T first(List<T> list) {
+    return list.get(0);
+}
+@end
+
+@lesson J8.3 | Bounded types
+book: Chapter 8, section 8.4
+@card read | extends as a bound
+text: Restrict a type variable so you can call methods on it.
+code:
+public static <T extends Comparable<T>> T max(List<T> list) {
+    T best = list.get(0);
+    for (T x : list) {
+        if (x.compareTo(best) > 0) best = x;
+    }
+    return best;
+}
+@end
+text: In a bound, `extends` is used for both classes and interfaces.
+@card quiz | Why the bound T extends Comparable<T> in max?
+option: To make it faster
+option*: So that compareTo can be called on T
+option: Generics require a bound
+explain: Without the bound the compiler only knows T is an Object, which has no compareTo.
+
+@lesson J8.4 | Type erasure and restrictions
+book: Chapter 8, sections 8.5-8.6
+@card read | Erasure
+text: Generics exist only at compile time. The JVM sees `Box<String>` and `Box<Integer>` as the same raw class `Box`; `T` becomes its bound (or `Object`).
+text: Consequences:
+text: - No primitives: `List<int>` is illegal, use `List<Integer>`.
+text: - No `new T()` and no `new T[10]`.
+text: - `instanceof List<String>` is illegal at run time.
+@card quiz | Is List<String> a subtype of List<Object>?
+option: Yes
+option*: No
+explain: Otherwise you could add an Integer to a list of strings through the List<Object> reference. Generic types are invariant.
+
+@lesson J8.5 | Wildcards
+book: Chapter 8, section 8.8
+@card read | ? extends and ? super
+text: - `List<? extends Number>`: a list of some subtype of Number. You can **read** Numbers; you cannot add.
+text: - `List<? super Integer>`: a list that accepts Integers. You can **add** Integers.
+text: - `List<?>`: any list, read-only as Object.
+text: Memory aid **PECS**: Producer Extends, Consumer Super.
+code:
+static double sum(List<? extends Number> nums) {
+    double total = 0;
+    for (Number n : nums) total += n.doubleValue();
+    return total;
+}
+@end
+@card quiz | You want a method that sums a List<Integer> or a List<Double>. Parameter type?
+option: List<Number>
+option*: List<? extends Number>
+option: List<? super Number>
+explain: List<Integer> is not a List<Number>, but it is a List<? extends Number>. The list produces values, so: extends.
+@card fix | Invariance
+task: sum(ints) does not compile because List<Integer> is not a List<Number>. Fix the parameter type with a wildcard.
+compile: body
+start:
+static double sum(List<Number> nums) {
+    double total = 0;
+    for (Number n : nums) total += n.doubleValue();
+    return total;
+}
+
+static double test() {
+    List<Integer> ints = List.of(1, 2, 3);
+    return sum(ints);
+}
+@end
+answer:
+static double sum(List<? extends Number> nums) {
+    double total = 0;
+    for (Number n : nums) total += n.doubleValue();
+    return total;
+}
+
+static double test() {
+    List<Integer> ints = List.of(1, 2, 3);
+    return sum(ints);
+}
+@end

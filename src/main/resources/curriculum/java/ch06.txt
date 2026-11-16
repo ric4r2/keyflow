@@ -1,0 +1,190 @@
+@unit J6 | Interfaces, Lambdas and Inner Classes
+desc: Contracts with interfaces, functions as values with lambdas, and classes inside classes.
+book: Core Java Vol. I, Chapter 6
+
+@lesson J6.1 | Interfaces
+book: Chapter 6, section 6.1
+@card read | A contract
+text: An **interface** lists methods a class promises to provide. A class `implements` it.
+code:
+public interface Payable {
+    double amountDue();          // implicitly public abstract
+}
+
+public class Invoice implements Payable {
+    public double amountDue() { return 120.0; }
+}
+@end
+text: A class extends one superclass but can implement **many** interfaces.
+@card quiz | How many interfaces can a class implement?
+option: One
+option: Two
+option*: As many as needed
+explain: Java has single inheritance for classes but a class may implement any number of interfaces.
+@card read | Comparable
+text: Implement `Comparable<T>` to give objects a natural order, so `Arrays.sort` and `Collections.sort` can sort them.
+code:
+public class Player implements Comparable<Player> {
+    private int score;
+    public int compareTo(Player other) {
+        return Integer.compare(score, other.score);
+    }
+}
+@end
+text: compareTo returns negative, zero or positive. Use `Integer.compare`, not subtraction (which can overflow).
+@card write | Implement Comparable
+task: Make `Player` implement `Comparable<Player>`, comparing by score.
+compile: body
+check: implements\s+Comparable<Player>
+check: int\s+compareTo\s*\(\s*Player
+start:
+static class Player {
+    int score;
+}
+@end
+answer:
+static class Player implements Comparable<Player> {
+    int score;
+
+    public int compareTo(Player other) {
+        return Integer.compare(score, other.score);
+    }
+}
+@end
+@card read | default and static methods
+text: Since Java 8 interfaces can contain `default` methods (with a body) and `static` methods.
+code:
+public interface Greeter {
+    String name();
+    default String greet() { return "Hello, " + name(); }
+}
+@end
+@card fix | Weaker access
+task: Interface methods are public. The implementation must be public too.
+compile: body
+start:
+interface Payable {
+    double amountDue();
+}
+
+static class Invoice implements Payable {
+    double amountDue() { return 120.0; }
+}
+@end
+answer:
+interface Payable {
+    double amountDue();
+}
+
+static class Invoice implements Payable {
+    public double amountDue() { return 120.0; }
+}
+@end
+
+@lesson J6.2 | Lambda expressions
+book: Chapter 6, section 6.2
+@card read | Code as a value
+text: A **lambda** is a block of code you can pass around: parameters, an arrow, a body.
+code:
+(String a, String b) -> a.length() - b.length()
+(a, b) -> a.length() - b.length()      // types inferred
+s -> s.isEmpty()                        // one parameter: no parentheses
+() -> System.out.println("hi")          // no parameters
+(x) -> { int y = x * 2; return y; }     // block body needs return
+@end
+@card read | Functional interfaces
+text: A lambda can be used wherever an interface with **exactly one abstract method** is expected: `Comparator`, `Runnable`, `Predicate`, `Function`...
+code:
+names.sort((a, b) -> a.length() - b.length());
+Runnable task = () -> System.out.println("running");
+Predicate<String> empty = s -> s.isEmpty();
+names.removeIf(s -> s.startsWith("x"));
+@end
+@card quiz | What is a functional interface?
+option: An interface with only static methods
+option*: An interface with exactly one abstract method
+option: Any interface used with streams
+explain: Lambdas implement that single abstract method. Default and static methods do not count.
+@card type | Sorting with a lambda
+task: Type the sort.
+compile: stmt
+code:
+List<String> words = new ArrayList<>(List.of("pear", "fig", "banana"));
+words.sort((a, b) -> Integer.compare(a.length(), b.length()));
+@end
+@card write | removeIf
+task: Remove every negative number from `nums` using `removeIf` with a lambda.
+compile: stmt
+check: nums\.removeIf\s*\(
+check: ->
+start:
+List<Integer> nums = new ArrayList<>(List.of(3, -1, 4, -5));
+@end
+answer:
+List<Integer> nums = new ArrayList<>(List.of(3, -1, 4, -5));
+nums.removeIf(n -> n < 0);
+@end
+
+@lesson J6.3 | Method references and Comparator
+book: Chapter 6, sections 6.2.4-6.2.8
+@card read | Method references
+text: When a lambda only calls one method, write a **method reference** with `::`.
+code:
+list.forEach(x -> System.out.println(x));
+list.forEach(System.out::println);          // same thing
+Function<String, Integer> len = String::length;
+Supplier<List<String>> make = ArrayList::new; // constructor reference
+@end
+@card read | Building comparators
+code:
+people.sort(Comparator.comparing(Person::getLastName)
+        .thenComparing(Person::getFirstName));
+words.sort(Comparator.comparingInt(String::length).reversed());
+@end
+@card quiz | What does String::length mean as a Function<String, Integer>?
+option: Call length() on the String class itself
+option*: s -> s.length()
+option: Create a new String
+explain: An unbound method reference uses its first parameter as the object: s -> s.length().
+@card read | Captured variables
+text: A lambda may use local variables from the surrounding method only if they are **effectively final** (never changed after assignment).
+code:
+int limit = 10;
+list.removeIf(x -> x > limit);   // fine
+// limit++;  would make the lambda above a compile error
+@end
+@card fix | Effectively final
+task: The lambda captures count, which is modified. Use a separate final variable for the threshold.
+hint: Remove the count++ line: it is not needed.
+compile: stmt
+start:
+List<Integer> data = new ArrayList<>(List.of(1, 2, 3));
+int count = 2;
+data.removeIf(x -> x > count);
+count++;
+@end
+answer:
+List<Integer> data = new ArrayList<>(List.of(1, 2, 3));
+int count = 2;
+data.removeIf(x -> x > count);
+@end
+
+@lesson J6.4 | Inner classes
+book: Chapter 6, section 6.3
+@card read | Classes inside classes
+text: - An **inner class** (non-static) can read the fields of its outer object.
+text: - A **static nested class** has no outer object: use it for helpers like `Map.Entry` or a `Node` in a linked list.
+text: - A **local class** lives inside a method. An **anonymous class** is a local class without a name.
+@card read | Anonymous class vs lambda
+code:
+Runnable r1 = new Runnable() {          // anonymous class
+    public void run() { System.out.println("tick"); }
+};
+Runnable r2 = () -> System.out.println("tick");   // lambda: shorter
+@end
+text: Use a lambda for functional interfaces. Use an anonymous class when you need state or several methods.
+@card quiz | Which nested class has no reference to an outer object?
+option: Inner class
+option: Anonymous class inside an instance method
+option*: static nested class
+explain: static nested classes are independent of any outer instance.

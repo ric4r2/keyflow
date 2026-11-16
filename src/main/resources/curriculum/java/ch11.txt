@@ -1,0 +1,70 @@
+@unit J11 | User Interface Components with Swing
+desc: Layouts, text input, choices, menus and dialogs.
+book: Core Java Vol. I, Chapter 11
+
+@lesson J11.1 | Layout managers
+book: Chapter 11, sections 11.1-11.2
+@card read | Let the layout place things
+text: Do not position components by pixels. A **layout manager** arranges them and adapts when the window resizes.
+text: - `FlowLayout`: left to right, wrapping (default for JPanel).
+text: - `BorderLayout`: NORTH, SOUTH, EAST, WEST, CENTER (default for frames).
+text: - `GridLayout`: equal cells. `GridBagLayout` / `BoxLayout`: flexible grids and rows.
+code:
+JPanel panel = new JPanel(new BorderLayout());
+panel.add(new JLabel("Title"), BorderLayout.NORTH);
+panel.add(new JScrollPane(new JTextArea()), BorderLayout.CENTER);
+@end
+@card quiz | Which layout gives the CENTER region all the extra space?
+option: FlowLayout
+option*: BorderLayout
+option: GridLayout
+explain: In BorderLayout the edges get their preferred size and CENTER takes the rest.
+
+@lesson J11.2 | Text and choices
+book: Chapter 11, sections 11.3-11.4
+@card read | Text input
+code:
+JTextField name = new JTextField(20);
+JPasswordField pass = new JPasswordField(20);
+JTextArea notes = new JTextArea(5, 40);
+String typed = name.getText();
+@end
+@card read | Choices
+code:
+JCheckBox bold = new JCheckBox("Bold");
+JRadioButton small = new JRadioButton("Small");   // group radios with a ButtonGroup
+JComboBox<String> size = new JComboBox<>(new String[] {"S", "M", "L"});
+JSlider volume = new JSlider(0, 100, 50);
+@end
+@card quiz | Which component lets the user pick one value from a drop-down list?
+option: JCheckBox
+option*: JComboBox
+option: JSlider
+explain: JComboBox shows a drop-down list of choices.
+
+@lesson J11.3 | Menus and dialogs
+book: Chapter 11, sections 11.5-11.7
+@card read | Menus
+code:
+JMenuBar bar = new JMenuBar();
+JMenu file = new JMenu("File");
+JMenuItem open = new JMenuItem("Open");
+open.addActionListener(e -> openFile());
+file.add(open);
+bar.add(file);
+frame.setJMenuBar(bar);
+@end
+@card read | Dialogs
+code:
+JOptionPane.showMessageDialog(frame, "Saved!");
+int answer = JOptionPane.showConfirmDialog(frame, "Delete?");
+JFileChooser chooser = new JFileChooser();
+if (chooser.showOpenDialog(frame) == JFileChooser.APPROVE_OPTION) {
+    File f = chooser.getSelectedFile();
+}
+@end
+@card quiz | Which class shows a quick message box?
+option*: JOptionPane
+option: JMessage
+option: JAlert
+explain: JOptionPane has static helpers for message, confirm and input dialogs.

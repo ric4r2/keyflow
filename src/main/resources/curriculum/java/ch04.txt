@@ -1,0 +1,318 @@
+@unit J4 | Objects and Classes
+desc: Model the world with classes: fields, constructors, methods, encapsulation, static members and packages.
+book: Core Java Vol. I, Chapter 4
+
+@lesson J4.1 | Objects, classes and state
+book: Chapter 4, sections 4.1-4.2
+@card read | Class = blueprint, object = thing
+text: A **class** describes a kind of thing: what it knows (**fields**) and what it can do (**methods**).
+text: An **object** is one concrete instance created with `new`.
+code:
+Task t = new Task("Buy milk");   // t refers to a new Task object
+t.complete();                    // ask the object to do something
+@end
+@card read | Variables hold references
+text: An object variable does not contain the object. It holds a **reference** (an arrow) to it.
+code:
+LocalDate a = LocalDate.of(2030, 1, 1);
+LocalDate b = a;      // b points to the SAME object
+LocalDate c = null;   // points to nothing
+@end
+@card quiz | Task a = new Task("x"); Task b = a; How many Task objects exist?
+option*: 1
+option: 2
+option: 0
+explain: new runs once. Both variables refer to the same object.
+@card read | Accessors and mutators
+text: An **accessor** only reads state (`date.getYear()`). A **mutator** changes it (`list.add(x)`).
+text: `LocalDate` has no mutators at all: `plusDays(30)` returns a **new** date. Immutable objects are simpler and safer.
+code:
+LocalDate today = LocalDate.now();
+LocalDate later = today.plusDays(30);   // today is unchanged
+@end
+@card quiz | After later = today.plusDays(1), what happened to today?
+option: It moved one day forward
+option*: Nothing, LocalDate is immutable
+option: It became null
+explain: plusDays returns a new LocalDate; the original never changes.
+
+@lesson J4.2 | Defining your own class
+book: Chapter 4, section 4.3
+@card read | A complete class
+code:
+public class Account {
+    private String owner;          // fields: private!
+    private double balance;
+
+    public Account(String owner) { // constructor
+        this.owner = owner;
+        this.balance = 0;
+    }
+
+    public void deposit(double amount) {
+        balance += amount;
+    }
+
+    public double getBalance() {
+        return balance;
+    }
+}
+@end
+@card read | Constructors
+text: A constructor has the class name and **no return type**. It runs once, with `new`, to set up the fields.
+text: `this.owner = owner;` means "my field owner gets the parameter owner".
+@card quiz | Which one is a constructor of class Account?
+option: public void Account(String o)
+option*: public Account(String o)
+option: public static Account create()
+option: Account()void
+explain: A constructor has the same name as the class and no return type. With void, it would be an ordinary method.
+@card type | Type the class
+task: Type the Account class.
+compile: class
+code:
+public class Account {
+    private String owner;
+    private double balance;
+
+    public Account(String owner) {
+        this.owner = owner;
+    }
+
+    public void deposit(double amount) {
+        balance += amount;
+    }
+
+    public double getBalance() {
+        return balance;
+    }
+}
+@end
+@card fix | Constructor with return type
+task: Point p = new Point(1, 2) fails to compile: the "constructor" is really a method. Fix it.
+hint: Remove the return type.
+compile: class
+start:
+public class Point {
+    private int x, y;
+
+    public void Point(int x, int y) {
+        this.x = x;
+        this.y = y;
+    }
+
+    static Point origin() {
+        return new Point(0, 0);
+    }
+}
+@end
+answer:
+public class Point {
+    private int x, y;
+
+    public Point(int x, int y) {
+        this.x = x;
+        this.y = y;
+    }
+
+    static Point origin() {
+        return new Point(0, 0);
+    }
+}
+@end
+
+@lesson J4.3 | Encapsulation
+book: Chapter 4, sections 4.3.6-4.3.9
+@card read | Keep fields private
+text: Make fields `private` and expose behavior through methods. Then the class controls its own rules.
+code:
+public void withdraw(double amount) {
+    if (amount > balance) throw new IllegalArgumentException("Insufficient funds");
+    balance -= amount;
+}
+@end
+text: With a public field, any code could set `balance = -1000`.
+@card read | Implicit and explicit parameters
+text: In `acct.deposit(50)`, `50` is the **explicit** parameter. `acct` is the **implicit** parameter, available inside the method as `this`.
+@card quiz | Why should fields be private?
+option: Private fields are faster
+option*: So the class alone controls how its state changes
+option: The compiler requires it
+explain: Encapsulation lets you enforce rules (no negative balance) and change the internals later without breaking callers.
+@card read | final fields
+text: A `final` field must be set in every constructor and can never change afterwards.
+code:
+private final String id;   // set once in the constructor
+@end
+text: Careful: `final` on a reference keeps the reference fixed, not the object it points to.
+@card write | A getter
+task: Add a public getter `getOwner()` returning the owner field.
+compile: class
+check: public\s+String\s+getOwner\s*\(\s*\)
+check: return\s+(this\.)?owner\s*;
+start:
+public class Account {
+    private String owner;
+
+    public Account(String owner) {
+        this.owner = owner;
+    }
+}
+@end
+answer:
+public class Account {
+    private String owner;
+
+    public Account(String owner) {
+        this.owner = owner;
+    }
+
+    public String getOwner() {
+        return owner;
+    }
+}
+@end
+
+@lesson J4.4 | static fields and methods
+book: Chapter 4, section 4.4
+@card read | One per class, not per object
+text: A `static` field belongs to the class: all objects share one copy.
+code:
+public class Ticket {
+    private static int nextId = 1;   // shared
+    private final int id;            // one per object
+
+    public Ticket() {
+        id = nextId++;
+    }
+}
+@end
+@card read | static methods
+text: A static method has no `this`; you call it on the class: `Math.max(a, b)`, `Integer.parseInt("42")`.
+text: Factory methods are static too: `LocalDate.of(2030, 1, 1)`. And `main` is static because no object exists yet when the program starts.
+@card quiz | Can a static method read an instance field directly?
+option: Yes, always
+option*: No, there is no this object
+option: Only if the field is final
+explain: Static methods are not called on an object, so there is no instance whose fields they could read.
+@card fix | Static context
+task: The compiler says "non-static method greet() cannot be referenced from a static context". Make greet static.
+compile: class
+start:
+public class App {
+    void greet() {
+        System.out.println("hi");
+    }
+
+    public static void main(String[] args) {
+        greet();
+    }
+}
+@end
+answer:
+public class App {
+    static void greet() {
+        System.out.println("hi");
+    }
+
+    public static void main(String[] args) {
+        greet();
+    }
+}
+@end
+
+@lesson J4.5 | Parameters are passed by value
+book: Chapter 4, section 4.5
+@card read | Always a copy
+text: Java **always** passes copies of values. For objects, the copied value is the reference.
+text: So a method can change an object's state, but cannot make the caller's variable point somewhere else.
+code:
+static void raise(Account a) { a.deposit(10); }  // works: same object
+static void swap(Account x, Account y) {          // useless:
+    Account tmp = x; x = y; y = tmp;              // only the copies swap
+}
+@end
+@card quiz | static void triple(int x) { x = 3 * x; } After int n = 5; triple(n); n is...
+option*: 5
+option: 15
+option: 0
+explain: triple receives a copy of n. Changing the copy does not affect n.
+
+@lesson J4.6 | Object construction in depth
+book: Chapter 4, section 4.6
+@card read | Overloading
+text: Several methods (or constructors) can share a name if their parameter lists differ.
+code:
+public Task(String title) { this(title, 3); }      // calls the other one
+public Task(String title, int priority) {
+    this.title = title;
+    this.priority = priority;
+}
+@end
+text: `this(...)` as the first statement calls another constructor of the same class.
+@card read | Default values
+text: Fields get defaults automatically: `0`, `false` or `null`. Local variables do not.
+text: If you write **no** constructor, Java gives you a no-argument one. Write any constructor and that free one disappears.
+@card quiz | A class only declares Task(String title). Does new Task() compile?
+option: Yes, Java adds a no-arg constructor
+option*: No
+explain: The default no-argument constructor is only provided when the class declares no constructors at all.
+@card type | Constructor chaining
+task: Type the two constructors.
+compile: class
+code:
+public class Task {
+    private String title;
+    private int priority;
+
+    public Task(String title) {
+        this(title, 3);
+    }
+
+    public Task(String title, int priority) {
+        this.title = title;
+        this.priority = priority;
+    }
+}
+@end
+
+@lesson J4.7 | Packages and imports
+book: Chapter 4, sections 4.7-4.8
+@card read | Packages group classes
+text: A package is a namespace, usually a reversed domain: `com.example.shop`. The file starts with `package com.example.shop;` and lives in folder `com/example/shop`.
+code:
+import java.time.LocalDate;     // one class
+import java.util.*;             // every class in java.util
+import static java.lang.Math.*; // static members: sqrt(2) instead of Math.sqrt(2)
+@end
+@card quiz | Which package is imported automatically?
+option: java.util
+option*: java.lang
+option: java.io
+explain: java.lang (String, Math, System, Integer...) is always available without an import.
+@card read | Access without a modifier
+text: A field or method with no `public`/`private` is **package-private**: visible to every class in the same package.
+text: Prefer `private` for fields; public classes and methods form your API.
+
+@lesson J4.8 | Documentation and class design
+book: Chapter 4, sections 4.9-4.10
+@card read | javadoc comments
+code:
+/**
+ * Moves money into this account.
+ * @param amount the amount to add, must be positive
+ * @return the new balance
+ */
+public double deposit(double amount) { ... }
+@end
+text: Run `javadoc` to turn these into HTML documentation.
+@card read | Design tips
+text: - Keep data private. Always initialize data.
+text: - Do not use too many primitive fields: group related ones into a class (an `Address`).
+text: - Not every field needs a getter and setter.
+text: - Split classes with too many responsibilities. Name classes with nouns, methods with verbs.
+@card quiz | Which tag documents a method parameter?
+option: @arg
+option*: @param
+option: @input
+explain: @param name description; @return documents the return value; @throws an exception.

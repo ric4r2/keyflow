@@ -1,0 +1,56 @@
+# Catalog of subjects and learning paths.
+# To add a subject: create its card files and add an @subject block here.
+# status: available | planned  (planned subjects show up as "coming soon")
+
+@subject java | Java | language
+desc: From your first program to generics, collections and concurrency. Short cards, instant feedback, real code.
+book: Follows the chapter structure of "Core Java, Volume I: Fundamentals" (11th ed.) by Cay S. Horstmann. All text here is original; read the book alongside for depth.
+files: java/ch01.txt, java/ch02.txt, java/ch03.txt, java/ch04.txt, java/ch05.txt, java/ch06.txt, java/ch07.txt, java/ch08.txt, java/ch09.txt, java/ch10.txt, java/ch11.txt, java/ch12.txt
+
+@subject vim | Vim | tool
+desc: Edit text at the speed of thought: modes, motions, operators, text objects, the dot command, macros and Ex commands.
+files: vim.txt
+
+@subject linux | Linux Terminal | terminal
+status: planned
+desc: Navigate, inspect and automate with bash: files, permissions, pipes, processes, grep, find, ssh.
+
+@subject powershell | Windows Terminal | terminal
+status: planned
+desc: PowerShell and cmd essentials: navigation, objects in the pipeline, scripting, services.
+
+@subject python | Python | language
+status: planned
+desc: Pythonic syntax, data structures, modules and the standard library.
+
+@subject sql | SQL | language
+status: planned
+desc: Query, join, aggregate and model relational data.
+
+@subject c | C | language
+status: planned
+desc: Pointers, memory, structs and the toolchain: the foundation for embedded work.
+
+@subject git | Git | tool
+status: planned
+desc: Commits, branches, merges, rebases and collaboration.
+
+@path backend | Backend Developer
+desc: Build and run server-side applications.
+steps: java, vim, linux, sql, git
+
+@path embedded | Embedded Systems
+desc: Program microcontrollers and low-level systems.
+steps: c, vim, linux, git
+
+@path ml | Machine Learning
+desc: Train and evaluate models.
+steps: python, linux, git, vim
+
+@path data | Data Analysis
+desc: Clean, query and visualize data.
+steps: python, sql, git
+
+@path tools | Terminal and Editor Mastery
+desc: Become fast at the keyboard on any machine.
+steps: vim, linux, powershell, git

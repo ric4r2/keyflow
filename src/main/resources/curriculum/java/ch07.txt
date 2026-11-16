@@ -1,0 +1,210 @@
+@unit J7 | Exceptions, Assertions and Logging
+desc: Handle errors cleanly, clean up resources, check assumptions and log what happens.
+book: Core Java Vol. I, Chapter 7
+
+@lesson J7.1 | The exception hierarchy
+book: Chapter 7, section 7.1
+@card read | Throwable and its children
+text: Everything thrown extends `Throwable`:
+text: - `Error`: serious JVM problems (out of memory). Do not catch.
+text: - `RuntimeException`: programming bugs (null access, bad index, bad cast). **Unchecked**.
+text: - Other `Exception`s (`IOException`...): things that can go wrong even in correct code. **Checked**: the compiler forces you to handle or declare them.
+@card quiz | NullPointerException is...
+option: checked
+option*: unchecked (a RuntimeException)
+option: an Error
+explain: NullPointerException signals a bug, so it is a RuntimeException and unchecked.
+@card quiz | Which one is a checked exception?
+option: ArrayIndexOutOfBoundsException
+option: ClassCastException
+option*: IOException
+explain: IOException can happen in correct code (missing file), so the compiler makes you deal with it.
+
+@lesson J7.2 | throws and throw
+book: Chapter 7, sections 7.1.2-7.1.4
+@card read | Declaring with throws
+text: A method that may let a checked exception escape must say so.
+code:
+public String load(Path p) throws IOException {
+    return Files.readString(p);
+}
+@end
+@card read | Throwing your own
+code:
+if (amount <= 0) {
+    throw new IllegalArgumentException("amount must be positive: " + amount);
+}
+@end
+text: Custom exceptions extend `Exception` (checked) or `RuntimeException` (unchecked).
+code:
+public class InsufficientFundsException extends Exception {
+    public InsufficientFundsException(String message) { super(message); }
+}
+@end
+@card fix | Unreported exception
+task: "unreported exception IOException; must be caught or declared to be thrown". Declare it on the method.
+compile: body
+start:
+static String read(java.nio.file.Path p) {
+    return java.nio.file.Files.readString(p);
+}
+@end
+answer:
+static String read(java.nio.file.Path p) throws java.io.IOException {
+    return java.nio.file.Files.readString(p);
+}
+@end
+answer:
+static String read(java.nio.file.Path p) throws Exception {
+    return java.nio.file.Files.readString(p);
+}
+@end
+@card write | Throw on bad input
+task: In `setAge`, throw an `IllegalArgumentException` when age is negative.
+compile: body
+check: if\s*\(\s*age\s*<\s*0\s*\)
+check: throw\s+new\s+IllegalArgumentException
+start:
+static int age;
+
+static void setAge(int a) {
+    int age = a;
+    Main.age = age;
+}
+@end
+answer:
+static int age;
+
+static void setAge(int a) {
+    int age = a;
+    if (age < 0) {
+        throw new IllegalArgumentException("negative age");
+    }
+    Main.age = age;
+}
+@end
+
+@lesson J7.3 | Catching exceptions
+book: Chapter 7, section 7.2
+@card read | try / catch
+code:
+try {
+    int n = Integer.parseInt(text);
+    System.out.println(n * 2);
+} catch (NumberFormatException e) {
+    System.out.println("Not a number: " + text);
+}
+@end
+text: Catch only what you can handle. Otherwise let it propagate with `throws`.
+@card read | Several types, finally
+code:
+try {
+    process(file);
+} catch (FileNotFoundException | UnknownHostException e) {  // multi-catch
+    log(e.getMessage());
+} catch (IOException e) {        // more general types go later
+    log("I/O problem");
+} finally {
+    System.out.println("always runs");
+}
+@end
+@card quiz | When does a finally block run?
+option: Only when an exception happens
+option: Only when no exception happens
+option*: Always, whether or not an exception happens
+explain: finally runs in every case, which makes it the place for cleanup (though try-with-resources is usually better).
+@card quiz | Why must catch (IOException e) come after catch (FileNotFoundException e)?
+option*: The general type would already catch the specific one, making the second unreachable
+option: Alphabetical order
+option: It doesn't matter
+explain: FileNotFoundException is a subclass of IOException. The compiler rejects an unreachable catch.
+@card write | Safe parse
+task: Parse `text` into `int value`; if it is not a number, set value to 0. Use try/catch with NumberFormatException.
+compile: stmt
+check: try\s*\{
+check: catch\s*\(\s*NumberFormatException
+start:
+String text = "12a";
+int value;
+@end
+answer:
+String text = "12a";
+int value;
+try {
+    value = Integer.parseInt(text);
+} catch (NumberFormatException e) {
+    value = 0;
+}
+@end
+
+@lesson J7.4 | try-with-resources
+book: Chapter 7, section 7.2.5
+@card read | Automatic closing
+text: Resources such as files and sockets must be closed. try-with-resources closes them automatically, even if an exception occurs.
+code:
+try (Scanner in = new Scanner(Path.of("data.txt"))) {
+    while (in.hasNextLine()) {
+        System.out.println(in.nextLine());
+    }
+}   // in.close() is called here automatically
+@end
+text: Any class implementing `AutoCloseable` works.
+@card quiz | What must a class implement to be used in try-with-resources?
+option: Closeable only
+option*: AutoCloseable
+option: Runnable
+explain: AutoCloseable declares close(). Closeable is a subinterface, so it works too.
+@card type | Read lines safely
+task: Type the try-with-resources block.
+compile: body
+code:
+static void print(java.nio.file.Path path) throws java.io.IOException {
+    try (Scanner in = new Scanner(path)) {
+        while (in.hasNextLine()) {
+            System.out.println(in.nextLine());
+        }
+    }
+}
+@end
+
+@lesson J7.5 | Stack traces and tips
+book: Chapter 7, sections 7.2.6-7.3
+@card read | Reading a stack trace
+text: The first line names the exception and message. Below are the method calls, **most recent first**, with file and line numbers. Find the first line from your own code.
+code:
+Exception in thread "main" java.lang.NullPointerException
+    at app.Report.title(Report.java:14)
+    at app.Main.main(Main.java:6)
+@end
+@card read | Exception tips
+text: - Do not use exceptions for normal control flow.
+text: - Do not swallow them: an empty `catch {}` hides bugs.
+text: - Throw early (validate parameters), catch late (where you can really handle it).
+text: - Be specific: throw `IllegalArgumentException`, not `Exception`.
+@card quiz | In a stack trace, which line usually points at your bug?
+option: The last line
+option*: The first line that is in your own code
+option: The line with java.lang
+explain: Trace lines go from where the exception happened outward. Skip library frames to the first frame in your code.
+
+@lesson J7.6 | Assertions and logging
+book: Chapter 7, sections 7.4-7.5
+@card read | assert
+text: `assert condition : message;` documents an assumption. Assertions are **off** by default; enable with `java -ea MyApp`.
+text: Use them for internal checks during development, not for validating user input.
+code:
+assert index >= 0 : "index should never be negative";
+@end
+@card read | Logging
+text: Logging beats `System.out.println`: levels, timestamps, and it can be switched off without editing code.
+code:
+private static final Logger log = Logger.getLogger("app");
+log.info("Server started");
+log.warning("Disk almost full");
+log.fine("details hidden by default");
+@end
+text: In real projects you will also see SLF4J and Log4j; the ideas are the same.
+@card quiz | Are assertions checked when you run java MyApp?
+option: Yes
+option*: No, you must enable them with -ea
+explain: Assertions are disabled by default so they cost nothing in production.
