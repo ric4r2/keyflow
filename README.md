@@ -33,11 +33,13 @@ cd keyflow
 ./run.sh
 ```
 
-**Windows** (Command Prompt or PowerShell)
+**Windows**: double-click `run.bat` in File Explorer, or in PowerShell:
 
-```bat
-run.bat
+```powershell
+.\run.bat
 ```
+
+(`run.sh` is only for Linux and macOS. On Windows it just asks which program should open it.)
 
 **Or build a single jar** and double-click it / run it anywhere:
 
