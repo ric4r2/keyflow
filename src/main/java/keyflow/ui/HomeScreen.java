@@ -121,10 +121,13 @@ final class HomeScreen extends JPanel {
         c.add(top, BorderLayout.NORTH);
         if (ok) {
             int done = app.progress.lessonsDone(s), total = s.allLessons().size();
-            Ui.Bar bar = new Ui.Bar(6);
+            Ui.Bar bar = new Ui.Bar(8).color(() -> Theme.get().success);
             bar.setValue(total == 0 ? 0 : done / (double) total);
             c.add(bar, BorderLayout.CENTER);
-            c.add(Ui.muted(done + " / " + total + " lessons"), BorderLayout.SOUTH);
+            JPanel foot = Ui.clear(new BorderLayout());
+            foot.add(Ui.muted(done + " / " + total + " lessons"), BorderLayout.WEST);
+            foot.add(Ui.label(SubjectScreen.percent(done, total) + "%", 0.9f, Font.BOLD, done > 0 ? t.success : t.muted), BorderLayout.EAST);
+            c.add(foot, BorderLayout.SOUTH);
             c.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
             Ui.onClick(c, () -> app.showSubject(s));
         } else {

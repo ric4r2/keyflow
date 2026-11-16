@@ -36,6 +36,37 @@ public class Point {
 }
 @end
 
+# Lesson ids are the keys saved progress uses, so they never change; the order on screen is the
+# order in this file.
+@lesson V1.4 | Fix typos with x
+intro: `x` deletes the character under the cursor. It is the smallest edit in Vim, and you stay in NORMAL mode.
+intro: Move onto the wrong character with `h j k l`, press `x`, done.
+keys: x
+
+@card vim | Remove a stray bracket
+task: Delete the extra `)`.
+hint: The cursor is already on it. Press x.
+explain: x is "cut one character".
+solution: x
+cursor: 0 9
+start:
+if (ready)) {
+@end
+target:
+if (ready) {
+@end
+
+@card vim | Delete a doubled letter
+task: Fix `Strring` so it reads `String`.
+hint: l l to reach an r, then x.
+solution: llx
+start:
+Strring name;
+@end
+target:
+String name;
+@end
+
 @card vim | Delete a typo with x
 task: Remove the extra `m` so it reads `System`.
 hint: Move with l, then x deletes the character under the cursor.
@@ -604,8 +635,9 @@ keep me too
 @lesson V7.2 | The dot formula
 intro: `.` repeats the last change. The **Dot Formula**: one keystroke to move, one keystroke to execute.
 intro: Make your change repeatable (e.g. `A;<Esc>` instead of moving to the end and typing), then use `j.` `j.`
-intro: Insert sessions, `dw`, `cw...<Esc>`, `>>`, `x` ... everything that changes text can be dot-repeated.
-keys: .
+intro: Insert sessions, `dw`, `cw...<Esc>`, `x` ... everything that changes text can be dot-repeated.
+intro: New here: `>>` indents a line one level and `<<` removes one level. Both repeat with `.` too.
+keys: .  >>  <<
 
 @card vim | Semicolons with dot
 task: Add the missing semicolons, using the dot command.
@@ -968,7 +1000,8 @@ desc: v selects characters, V selects lines. Select first, then apply an operato
 intro: `v` starts a characterwise selection, `V` a linewise one. Move to extend it, then press an operator: `d` `y` `c` `>` `<` `~` `U` `u` `J`.
 intro: `o` jumps to the other end of the selection. `gv` reselects the last selection.
 intro: Tip: experts prefer operators + motions (repeatable with .), but visual mode is great when you need to see what you select.
-keys: v  V  o  gv
+intro: Two new operators that are handy on a selection: `U` makes it UPPERCASE and `J` joins the selected lines into one.
+keys: v  V  o  gv  U  J
 
 @card vim | Delete a selection
 task: Delete the parameter `int unused, ` from the list.
@@ -1472,7 +1505,8 @@ desc: Vim-golf style challenges. Combine everything: text objects, dot, macros, 
 @lesson V17.1 | Refactoring challenges
 intro: Think before you type: what is the smallest repeatable change? Can a text object, `.`, a macro or an Ex command do it for you?
 intro: Par is the reference solution's keystroke count. 3 stars = at or under par.
-keys: everything
+intro: One last trick for code: in insert mode `Ctrl-t` adds one indent level and `Ctrl-d` removes one.
+keys: everything  Ctrl-t  Ctrl-d
 
 @card vim | List to array initializer
 task: Turn the list of names into `String[] names = {"ann", "bob", "cid"};` on one line.

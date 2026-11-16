@@ -13,6 +13,8 @@ It runs anywhere Java runs: **Windows, macOS and Linux**.
 | ![Learn card](docs/images/learn-card.png) | ![Quiz card](docs/images/quiz.png) |
 | **Fix real code, in Vim or a plain editor** | **Drill Vim on real Java** |
 | ![Fix-it card](docs/images/fix-it.png) | ![Vim drill](docs/images/vim-drill.png) |
+| **Watch your path turn green** | |
+| ![Progress path](docs/images/subject.png) | |
 
 <p align="center"><img src="docs/images/dark-vim.png" width="49%" alt="Dark theme Vim drill"> <img src="docs/images/dark-home.png" width="49%" alt="Dark theme home"></p>
 
@@ -57,7 +59,7 @@ Your progress is saved automatically after every card in `~/.keyflow/progress.pr
 | Subject | Content |
 |---|---|
 | **Java** | 12 chapters, 65 micro-lessons: environment, types, operators, strings, I/O, control flow, arrays, classes, inheritance, interfaces and lambdas, exceptions, generics, collections, Swing, concurrency |
-| **Vim** | 17 units, 38 lessons, 99 drills: modes, motions, operators, text objects, dot command, search, visual mode, marks, registers, macros, `:s` `:g` `:norm` `:sort`, real refactoring challenges |
+| **Vim** | 17 units, 39 lessons, 101 drills: modes, motions, operators, text objects, dot command, search, visual mode, marks, registers, macros, `:s` `:g` `:norm` `:sort`, real refactoring challenges |
 | Coming soon | Linux terminal, Windows terminal (PowerShell), Python, SQL, C, Git |
 
 **Paths** group subjects by goal: *Backend Developer*, *Embedded Systems*, *Machine Learning*, *Data Analysis*, *Terminal & Editor Mastery*.
@@ -94,7 +96,8 @@ The design follows practitioner guidance on ADHD-friendly learning and interface
 | Spaced repetition | Leitner boxes bring cards back after 1, 2, 4, 8, 16 and 32 days (**Review** on the home screen) |
 | One clear next step | The home screen has one big **Continue** button; each card has one primary action (Enter) |
 | External structure | Optional focus timer: 15-minute sprints with 3-minute breaks (configurable) |
-| Visible progress | Progress bar on every lesson, streak, small daily goal, XP |
+| Visible progress | Each subject is a path: a rail that turns green, a checkpoint per lesson, a milestone per unit, percentages everywhere. Plus a progress bar in every lesson, streak, daily goal and XP |
+| Never ahead of you | Each lesson builds only on earlier ones: tests check that no Vim drill needs a key and no Java exercise needs a construct that hasn't been taught yet |
 | Interruptions are normal | Auto-save after every card; Continue resumes exactly where you stopped |
 | Low distraction | No animation, no sounds except the timer, no badges or pop-ups |
 
@@ -139,7 +142,7 @@ All content lives in plain text under [`src/main/resources/curriculum`](src/main
 
    Card kinds: `read`, `quiz`, `type`, `fix`, `write`, `vim`. Code cards accept `compile: class|body|stmt|none`, `check:` regexes and one or more `answer:` blocks. Vim drills take `start:`, `target:`, `cursor:`, `goal:` and a reference `solution:` in Vim key notation.
 
-3. Run the tests. **Every card is validated automatically**: Vim solutions are replayed and must reach the target, Java answers must compile, quizzes need exactly one correct option.
+3. Run the tests. **Every card is validated automatically**: Vim solutions are replayed and must reach the target, Java answers must compile, quizzes need exactly one correct option, and content must be progressive (a Vim drill may only use keys from the `keys:` lines of its lesson or earlier ones; a Java exercise may only use constructs an earlier Learn card has shown).
 
    ```bash
    ./test.sh      # Windows: test.bat

@@ -18,6 +18,8 @@ public final class TestRunner {
         EngineTest.run(t);
         CurriculumTest.run(t);
         ThemeTest.run(t);
+        KeyOrderTest.run(t);
+        ConceptOrderTest.run(t);
         keyflow.ui.NavigationTest.run(t);
         System.out.println();
         for (String f : t.failures) System.out.println("FAIL " + f);
